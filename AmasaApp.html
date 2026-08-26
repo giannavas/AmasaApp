@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AmasaApp — Panificadora AmasaPan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FAF3E6;
+    --paper:#FFFFFF;
+    --ink:#3B2A20;
+    --ink-soft:#7A6A5C;
+    --crust:#A8461F;
+    --crust-dark:#8A3717;
+    --wheat:#D9A441;
+    --sage:#6F8F63;
+    --sage-bg:#E9F0E4;
+    --alert:#C1443C;
+    --alert-bg:#FBE7E4;
+    --line:#E4D9C5;
+    --radius:14px;
+    --shadow:0 2px 10px rgba(59,42,32,0.06), 0 1px 2px rgba(59,42,32,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    letter-spacing:-0.01em;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  button{ font-family:inherit; }
+
+  /* ---------- Background texture ---------- */
+  body{
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(168,70,31,0.08) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  /* ---------- Login ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    padding:44px 40px 36px;
+    width:100%;
+    max-width:400px;
+    position:relative;
+    overflow:hidden;
+  }
+  .login-card::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:6px;
+    background:repeating-linear-gradient(90deg, var(--crust) 0 14px, var(--wheat) 14px 28px);
+  }
+  .login-mark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .login-mark svg{ width:34px; height:34px; flex:none; }
+  .login-mark .display{ font-size:26px; font-weight:700; color:var(--crust-dark); }
+  .login-tagline{
+    color:var(--ink-soft);
+    font-size:13.5px;
+    margin:0 0 28px;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field select, .field input{
+    width:100%;
+    padding:11px 13px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:14.5px;
+    font-family:inherit;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .field select:focus, .field input:focus{
+    border-color:var(--crust);
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border:none;
+    border-radius:10px;
+    padding:11px 18px;
+    font-size:14.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .08s, filter .15s;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn-primary{ background:var(--crust); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-block{ width:100%; margin-top:6px; }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+  .btn-ghost:hover{ border-color:var(--crust); color:var(--crust-dark); }
+  .btn-sm{ padding:7px 12px; font-size:13px; border-radius:8px; }
+  .login-hint{
+    margin-top:22px;
+    font-size:12px;
+    color:var(--ink-soft);
+    background:var(--cream);
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    line-height:1.5;
+  }
+
+  /* ---------- App shell ---------- */
+  #app-shell{ display:none; min-height:100vh; }
+  #app-shell.active{ display:flex; }
+
+  .sidebar{
+    width:216px;
+    flex:none;
+    background:var(--ink);
+    color:#EFE6DA;
+    display:flex;
+    flex-direction:column;
+    padding:22px 14px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:0 8px 22px;
+    margin-bottom:8px;
+    border-bottom:1px solid rgba(239,230,218,0.12);
+  }
+  .brand svg{ width:26px; height:26px; color:var(--wheat); flex:none; }
+  .brand span{ font-family:'Fraunces',serif; font-size:19px; font-weight:700; color:#fff; }
+
+  nav.nav{ display:flex; flex-direction:column; gap:3px; margin-top:10px; }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:10px 12px;
+    border-radius:9px;
+    color:#C9BCAB;
+    cursor:pointer;
+    font-size:14px;
+    font-weight:500;
+    border:none;
+    background:transparent;
+    text-align:left;
+    width:100%;
+  }
+  .nav-item svg{ width:18px; height:18px; flex:none; opacity:.85; }
+  .nav-item:hover{ background:rgba(239,230,218,0.07); color:#fff; }
+  .nav-item.active{ background:var(--crust); color:#fff; }
+  .nav-item.active svg{ opacity:1; }
+
+  .sidebar-footer{
+    margin-top:auto;
+    padding-top:14px;
+    border-top:1px solid rgba(239,230,218,0.12);
+  }
+  .user-chip{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:8px;
+    border-radius:9px;
+    margin-bottom:6px;
+  }
+  .user-avatar{
+    width:30px; height:30px; border-radius:50%;
+    background:var(--wheat);
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:12.5px; flex:none;
+    font-family:'Fraunces',serif;
+  }
+  .user-meta{ line-height:1.25; overflow:hidden; }
+  .user-meta .u-name{ font-size:13px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .user-meta .u-role{ font-size:11px; color:#C9BCAB; }
+  .logout-btn{
+    display:flex; align-items:center; gap:8px;
+    width:100%; padding:8px 10px; border-radius:9px;
+    background:transparent; border:none; color:#C9BCAB;
+    font-size:13px; cursor:pointer;
+  }
+  .logout-btn:hover{ background:rgba(239,230,218,0.07); color:#fff; }
+  .logout-btn svg{ width:16px; height:16px; }
+
+  /* ---------- Content ---------- */
+  .content{ flex:1; padding:30px 36px 60px; min-width:0; }
+  .page-header{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    margin-bottom:22px; gap:16px; flex-wrap:wrap;
+  }
+  .page-header h1{ font-size:26px; margin:0 0 4px; }
+  .page-header p{ margin:0; color:var(--ink-soft); font-size:13.5px; }
+  .eyebrow{
+    font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--crust); margin:0 0 2px;
+  }
+
+  /* Ticket-style KPI cards */
+  .kpi-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px; margin-bottom:26px; }
+  .kpi-ticket{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    position:relative;
+    box-shadow:var(--shadow);
+  }
+  .kpi-ticket::after{
+    content:"";
+    position:absolute; left:14px; right:14px; bottom:0;
+    border-bottom:1.5px dashed var(--line);
+  }
+  .kpi-ticket .kpi-label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:600; }
+  .kpi-ticket .kpi-value{ font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:600; margin:6px 0 2px; color:var(--ink); }
+  .kpi-ticket .kpi-sub{ font-size:12px; color:var(--ink-soft); }
+  .kpi-ticket.accent .kpi-value{ color:var(--crust-dark); }
+  .kpi-ticket.warn .kpi-value{ color:var(--alert); }
+
+  .grid-2{ display:grid; grid-template-columns:1.3fr 1fr; gap:18px; align-items:start; }
+  @media (max-width:920px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px 22px;
+    margin-bottom:18px;
+  }
+  .card h2{ font-size:16.5px; margin:0 0 14px; }
+  .card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; flex-wrap:wrap; }
+  .card-head h2{ margin:0; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--ink-soft); font-weight:600; padding:0 10px 9px; border-bottom:1px solid var(--line);
+  }
+  td{ padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:var(--cream); }
+  .num{ font-family:'JetBrains Mono',monospace; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 9px; border-radius:100px; font-size:11.5px; font-weight:600;
+  }
+  .badge-ok{ background:var(--sage-bg); color:var(--sage); }
+  .badge-low{ background:var(--alert-bg); color:var(--alert); }
+  .badge-high{ background:#FDF1DC; color:#9C6A15; }
+  .badge-role{ background:var(--cream); color:var(--ink-soft); border:1px solid var(--line); }
+
+  .empty-state{
+    text-align:center; padding:34px 12px; color:var(--ink-soft); font-size:13.5px;
+  }
+  .empty-state svg{ width:34px; height:34px; margin-bottom:10px; opacity:.5; }
+
+  /* Forms inline */
+  .form-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:4px; }
+  .form-grid .field{ margin-bottom:0; }
+  .form-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
+
+  .toast{
+    position:fixed; bottom:22px; right:22px;
+    background:var(--ink); color:#fff; padding:12px 18px;
+    border-radius:10px; font-size:13.5px; box-shadow:var(--shadow);
+    display:flex; align-items:center; gap:9px;
+    opacity:0; transform:translateY(8px); pointer-events:none;
+    transition:opacity .2s, transform .2s;
+    z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateY(0); }
+  .toast svg{ width:16px; height:16px; color:var(--wheat); flex:none; }
+
+  .alert-row{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:13px 14px; border-radius:10px; margin-bottom:9px;
+    border:1px solid var(--line);
+  }
+  .alert-row.low{ background:var(--alert-bg); border-color:#EFC8C3; }
+  .alert-row.high{ background:#FDF1DC; border-color:#F0DBAB; }
+  .alert-row svg{ width:18px; height:18px; flex:none; margin-top:1px; }
+  .alert-row.low svg{ color:var(--alert); }
+  .alert-row.high svg{ color:#9C6A15; }
+  .alert-row .a-title{ font-weight:600; font-size:13.5px; margin-bottom:1px; }
+  .alert-row .a-sub{ font-size:12.5px; color:var(--ink-soft); }
+
+  ::selection{ background:var(--wheat); color:var(--ink); }
+  .muted{ color:var(--ink-soft); }
+  .sr-only{ position:absolute; width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0); }
+
+  @media (max-width:760px){
+    #app-shell.active{ flex-direction:column; }
+    .sidebar{ width:100%; height:auto; position:relative; flex-direction:row; align-items:center; overflow-x:auto; padding:12px; }
+    .brand{ border-bottom:none; padding:0 10px 0 0; margin:0; }
+    nav.nav{ flex-direction:row; margin:0; }
+    .sidebar-footer{ display:none; }
+    .content{ padding:20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c-3 2-4 4-4 6.5C8 13 9.8 15 12 15s4-2 4-5.5C16 7 15 5 12 3Z"/><path d="M6 21c.5-4 2.5-6 6-6s5.5 2 6 6"/></svg>
+      <span class="display">AmasaApp</span>
+    </div>
+    <p class="login-tagline">Gestión integral de Panificadora AmasaPan</p>
+
+    <div class="field">
+      <label for="loginUser">Usuario</label>
+      <select id="loginUser"></select>
+    </div>
+    <div class="field">
+      <label for="loginPass">Contraseña</label>
+      <input id="loginPass" type="password" placeholder="••••••••" value="demo1234">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="doLogin()">Ingresar</button>
+
+    <div class="login-hint">Demo: elegí un usuario para simular su rol (Administrador, Encargado o Empleado). La contraseña no se valida — es una maqueta funcional.</div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c-3 2-4 4-4 6.5C8 13 9.8 15 12 15s4-2 4-5.5C16 7 15 5 12 3Z"/><path d="M6 21c.5-4 2.5-6 6-6s5.5 2 6 6"/></svg>
+      <span>AmasaApp</span>
+    </div>
+    <nav class="nav" id="navList"></nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="userInitials">--</div>
+        <div class="user-meta">
+          <div class="u-name" id="userName">—</div>
+          <div class="u-role" id="userRole">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <main class="content" id="content"></main>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg"></span></div>
+
+<script>
+/* =========================================================
+   ICONS
+========================================================= */
+const ICONS = {
+  dashboard:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>`,
+  insumos:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 7v10l8 5 8-5V7l-8-5Z"/><path d="M4 7l8 5 8-5"/><path d="M12 12v10"/></svg>`,
+  produccion:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c-3 2-4 4-4 6.5C8 13 9.8 15 12 15s4-2 4-5.5C16 7 15 5 12 3Z"/><path d="M6 21c.5-4 2.5-6 6-6s5.5 2 6 6"/></svg>`,
+  ventas:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 4 6v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6l-2-4"/><path d="M4 6h16"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+  alertas:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>`,
+  usuarios:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`,
+  warn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+  box:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5.5"/></svg>`
+};
+
+/* =========================================================
+   MOCK DATA (basado en el DER de AmasaApp)
+========================================================= */
+const roles = ["Administrador","Encargado","Empleado"];
+
+const usuarios = [
+  {id:1, nombre:"Kevin Segovia", email:"kevin@amasapan.com", rol:"Administrador", activo:true},
+  {id:2, nombre:"Gianmarco Navas", email:"gianmarco@amasapan.com", rol:"Encargado", activo:true},
+  {id:3, nombre:"Agustín Llop", email:"agustin@amasapan.com", rol:"Empleado", activo:true},
+  {id:4, nombre:"Rocío Fernández", email:"rocio@amasapan.com", rol:"Empleado", activo:true},
+];
+
+const proveedores = [
+  {id:1, razonSocial:"Molinos del Sur SRL", cuit:"30-71234567-8", telefono:"341-555-0102"},
+  {id:2, razonSocial:"Lácteos Rosario", cuit:"30-70998877-1", telefono:"341-555-0187"},
+  {id:3, razonSocial:"Distribuidora El Trigal", cuit:"30-69887766-4", telefono:"341-555-0221"},
+];
+
+let materiaPrima = [
+  {id:1, nombre:"Harina 000", unidad:"kg", stock:120, stockMin:80, stockMax:400, precioUnitario:820, proveedorId:1},
+  {id:2, nombre:"Levadura fresca", unidad:"kg", stock:6, stockMin:8, stockMax:30, precioUnitario:3400, proveedorId:3},
+  {id:3, nombre:"Manteca", unidad:"kg", stock:22, stockMin:10, stockMax:50, precioUnitario:4600, proveedorId:2},
+  {id:4, nombre:"Azúcar", unidad:"kg", stock:45, stockMin:20, stockMax:120, precioUnitario:980, proveedorId:1},
+  {id:5, nombre:"Sal fina", unidad:"kg", stock:18, stockMin:5, stockMax:40, precioUnitario:450, proveedorId:1},
+  {id:6, nombre:"Huevos", unidad:"unid", stock:340, stockMin:150, stockMax:300, precioUnitario:110, proveedorId:2},
+];
+
+let productos = [
+  {id:1, nombre:"Pan francés", stock:38, stockMin:40, stockMax:200, precioVenta:1200, recetaId:1},
+  {id:2, nombre:"Medialunas (doc.)", stock:64, stockMin:20, stockMax:150, precioVenta:5400, recetaId:2},
+  {id:3, nombre:"Pan lactal", stock:15, stockMin:15, stockMax:60, precioVenta:3800, recetaId:3},
+  {id:4, nombre:"Facturas surtidas (doc.)", stock:29, stockMin:15, stockMax:100, precioVenta:6200, recetaId:4},
+];
+
+const recetas = [
+  {id:1, nombre:"Receta Pan francés", productoId:1, rendimiento:20,
+    detalle:[{materiaPrimaId:1, cantidad:10},{materiaPrimaId:2, cantidad:0.3},{materiaPrimaId:5, cantidad:0.2}]},
+  {id:2, nombre:"Receta Medialunas", productoId:2, rendimiento:10,
+    detalle:[{materiaPrimaId:1, cantidad:6},{materiaPrimaId:3, cantidad:2.5},{materiaPrimaId:4, cantidad:1.2},{materiaPrimaId:6, cantidad:6}]},
+  {id:3, nombre:"Receta Pan lactal", productoId:3, rendimiento:8,
+    detalle:[{materiaPrimaId:1, cantidad:8},{materiaPrimaId:3, cantidad:1},{materiaPrimaId:4, cantidad:0.6},{materiaPrimaId:6, cantidad:3}]},
+  {id:4, nombre:"Receta Facturas", productoId:4, rendimiento:15,
+    detalle:[{materiaPrimaId:1, cantidad:7},{materiaPrimaId:3, cantidad:2},{materiaPrimaId:4, cantidad:1.5},{materiaPrimaId:6, cantidad:5}]},
+];
+
+let loteProduccion = [
+  {id:1, fecha:"2026-08-20", recetaId:1, cantidad:40, costoTotal:36680, usuario:"Gianmarco Navas"},
+  {id:2, fecha:"2026-08-21", recetaId:2, cantidad:20, costoTotal:33920, usuario:"Gianmarco Navas"},
+  {id:3, fecha:"2026-08-23", recetaId:4, cantidad:30, costoTotal:39160, usuario:"Agustín Llop"},
+];
+
+let ventas = [
+  {id:1, fecha:"2026-08-22", productoId:1, cantidad:12, total:14400, usuario:"Rocío Fernández"},
+  {id:2, fecha:"2026-08-23", productoId:2, cantidad:5, total:27000, usuario:"Agustín Llop"},
+  {id:3, fecha:"2026-08-24", productoId:3, cantidad:8, total:30400, usuario:"Rocío Fernández"},
+  {id:4, fecha:"2026-08-24", productoId:4, cantidad:6, total:37200, usuario:"Agustín Llop"},
+];
+
+/* =========================================================
+   PERMISOS por rol (según los 3 actores del relevamiento)
+========================================================= */
+const NAV_ITEMS = [
+  {key:"dashboard",  label:"Indicadores", icon:"dashboard"},
+  {key:"insumos",    label:"Insumos",     icon:"insumos"},
+  {key:"produccion", label:"Producción",  icon:"produccion"},
+  {key:"ventas",     label:"Ventas",      icon:"ventas"},
+  {key:"alertas",    label:"Alertas",     icon:"alertas"},
+  {key:"usuarios",   label:"Usuarios",    icon:"usuarios"},
+];
+const ROLE_ACCESS = {
+  Administrador: ["dashboard","insumos","produccion","ventas","alertas","usuarios"],
+  Encargado:     ["dashboard","insumos","produccion","ventas","alertas"],
+  Empleado:      ["dashboard","produccion","ventas","alertas"],
+};
+
+/* =========================================================
+   STATE
+========================================================= */
+let currentUser = null;
+let currentView = "dashboard";
+
+function fmtMoney(n){ return "$" + Math.round(n).toLocaleString("es-AR"); }
+function initials(name){ return name.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+/* =========================================================
+   LOGIN
+========================================================= */
+function populateLoginSelect(){
+  const sel = document.getElementById("loginUser");
+  sel.innerHTML = usuarios.map(u=>`<option value="${u.id}">${u.nombre} — ${u.rol}</option>`).join("");
+}
+function doLogin(){
+  const id = parseInt(document.getElementById("loginUser").value);
+  currentUser = usuarios.find(u=>u.id===id);
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app-shell").classList.add("active");
+  document.getElementById("userName").textContent = currentUser.nombre;
+  document.getElementById("userRole").textContent = currentUser.rol;
+  document.getElementById("userInitials").textContent = initials(currentUser.nombre);
+  currentView = ROLE_ACCESS[currentUser.rol][0];
+  renderNav();
+  renderView();
+}
+function doLogout(){
+  currentUser = null;
+  document.getElementById("app-shell").classList.remove("active");
+  document.getElementById("login-screen").style.display = "flex";
+}
+
+/* =========================================================
+   NAV
+========================================================= */
+function renderNav(){
+  const allowed = ROLE_ACCESS[currentUser.rol];
+  const nav = document.getElementById("navList");
+  nav.innerHTML = NAV_ITEMS.filter(it=>allowed.includes(it.key)).map(it=>`
+    <button class="nav-item ${currentView===it.key?'active':''}" onclick="goTo('${it.key}')">
+      ${ICONS[it.icon]}<span>${it.label}</span>
+    </button>
+  `).join("");
+}
+function goTo(view){
+  currentView = view;
+  renderNav();
+  renderView();
+}
+
+/* =========================================================
+   ALERTAS (derivadas de stock)
+========================================================= */
+function getAlertas(){
+  const out = [];
+  materiaPrima.forEach(m=>{
+    if(m.stock < m.stockMin) out.push({tipo:"low", entidad:"Insumo", nombre:m.nombre, detalle:`Stock actual ${m.stock} ${m.unidad} — mínimo ${m.stockMin} ${m.unidad}`});
+    else if(m.stock > m.stockMax) out.push({tipo:"high", entidad:"Insumo", nombre:m.nombre, detalle:`Stock actual ${m.stock} ${m.unidad} — supera el máximo de ${m.stockMax} ${m.unidad}`});
+  });
+  productos.forEach(p=>{
+    if(p.stock < p.stockMin) out.push({tipo:"low", entidad:"Producto", nombre:p.nombre, detalle:`Stock actual ${p.stock} u. — mínimo ${p.stockMin} u.`});
+    else if(p.stock > p.stockMax) out.push({tipo:"high", entidad:"Producto", nombre:p.nombre, detalle:`Stock actual ${p.stock} u. — supera el máximo de ${p.stockMax} u.`});
+  });
+  return out;
+}
+function stockBadge(actual,min,max){
+  if(actual < min) return `<span class="badge badge-low">Bajo</span>`;
+  if(actual > max) return `<span class="badge badge-high">Exceso</span>`;
+  return `<span class="badge badge-ok">OK</span>`;
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById("toast");
+  document.getElementById("toastMsg").textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2600);
+}
+
+/* =========================================================
+   RENDER: ROUTER
+========================================================= */
+function renderView(){
+  const c = document.getElementById("content");
+  if(currentView==="dashboard")  return c.innerHTML = viewDashboard();
+  if(currentView==="insumos")    return renderInsumos();
+  if(currentView==="produccion") return renderProduccion();
+  if(currentView==="ventas")     return renderVentas();
+  if(currentView==="alertas")    return c.innerHTML = viewAlertas();
+  if(currentView==="usuarios")   return renderUsuarios();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function viewDashboard(){
+  const alertas = getAlertas();
+  const ventasHoy = ventas.filter(v=>v.fecha===ventas[ventas.length-1].fecha);
+  const totalVentas = ventas.reduce((a,v)=>a+v.total,0);
+  const totalProduccionCosto = loteProduccion.reduce((a,l)=>a+l.costoTotal,0);
+  const unidadesProducidas = loteProduccion.reduce((a,l)=>a+l.cantidad,0);
+  const ultimasVentas = [...ventas].slice(-5).reverse();
+
+  return `
+    <div class="page-header">
+      <div>
+        <div class="eyebrow">Panel</div>
+        <h1>Hola, ${currentUser.nombre.split(" ")[0]} 👋</h1>
+        <p>Así viene el mes en AmasaPan.</p>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-ticket accent">
+        <div class="kpi-label">Ventas totales</div>
+        <div class="kpi-value mono">${fmtMoney(totalVentas)}</div>
+        <div class="kpi-sub">${ventas.length} ventas registradas</div>
+      </div>
+      <div class="kpi-ticket">
+        <div class="kpi-label">Unidades producidas</div>
+        <div class="kpi-value mono">${unidadesProducidas}</div>
+        <div class="kpi-sub">en ${loteProduccion.length} lotes</div>
+      </div>
+      <div class="kpi-ticket">
+        <div class="kpi-label">Costo de producción</div>
+        <div class="kpi-value mono">${fmtMoney(totalProduccionCosto)}</div>
+        <div class="kpi-sub">acumulado</div>
+      </div>
+      <div class="kpi-ticket ${alertas.length?'warn':''}">
+        <div class="kpi-label">Alertas activas</div>
+        <div class="kpi-value mono">${alertas.length}</div>
+        <div class="kpi-sub">${alertas.length? 'requieren atención':'todo en orden'}</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h2>Últimas ventas</h2></div>
+        ${ultimasVentas.length ? `
+        <table>
+          <thead><tr><th>Fecha</th><th>Producto</th><th>Cant.</th><th>Total</th><th>Vendedor</th></tr></thead>
+          <tbody>
+            ${ultimasVentas.map(v=>{
+              const p = productos.find(p=>p.id===v.productoId);
+              return `<tr><td>${v.fecha}</td><td>${p?p.nombre:'—'}</td><td class="num">${v.cantidad}</td><td class="num">${fmtMoney(v.total)}</td><td>${v.usuario}</td></tr>`;
+            }).join("")}
+          </tbody>
+        </table>` : emptyState("Todavía no hay ventas registradas.")}
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Alertas de stock</h2></div>
+        ${alertas.length ? alertas.slice(0,4).map(a=>`
+          <div class="alert-row ${a.tipo}">
+            ${ICONS.warn}
+            <div><div class="a-title">${a.nombre}</div><div class="a-sub">${a.detalle}</div></div>
+          </div>
+        `).join("") : emptyState("No hay alertas por el momento.", true)}
+        ${alertas.length>4?`<div class="muted" style="font-size:12.5px;margin-top:4px;">+${alertas.length-4} más — ver sección Alertas</div>`:''}
+      </div>
+    </div>
+  `;
+}
+
+function emptyState(msg, ok){
+  return `<div class="empty-state">${ok?ICONS.check:ICONS.box}<div>${msg}</div></div>`;
+}
+
+/* ---------------- INSUMOS ---------------- */
+function renderInsumos(){
+  document.getElementById("content").innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="eyebrow">Materias primas</div>
+        <h1>Insumos</h1>
+        <p>Stock actual de materia prima y umbrales configurados.</p>
+      </div>
+      <button class="btn btn-primary" onclick="toggleIngresoForm()">${ICONS.plus} Registrar ingreso</button>
+    </div>
+
+    <div class="card" id="ingresoForm" style="display:none;">
+      <h2>Nuevo ingreso de materia prima</h2>
+      <div class="form-grid">
+        <div class="field"><label>Materia prima</label>
+          <select id="inMateria">${materiaPrima.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join("")}</select>
+        </div>
+        <div class="field"><label>Proveedor</label>
+          <select id="inProveedor">${proveedores.map(p=>`<option value="${p.id}">${p.razonSocial}</option>`).join("")}</select>
+        </div>
+        <div class="field"><label>Cantidad</label><input id="inCantidad" type="number" min="0.1" step="0.1" value="10"></div>
+        <div class="field"><label>Precio unitario</label><input id="inPrecio" type="number" min="1" value="800"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="toggleIngresoForm()">Cancelar</button>
+        <button class="btn btn-primary" onclick="registrarIngreso()">Guardar ingreso</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>Insumo</th><th>Proveedor habitual</th><th>Stock</th><th>Mín. / Máx.</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${materiaPrima.map(m=>{
+            const prov = proveedores.find(p=>p.id===m.proveedorId);
+            return `<tr>
+              <td><strong>${m.nombre}</strong></td>
+              <td class="muted">${prov?prov.razonSocial:'—'}</td>
+              <td class="num">${m.stock} ${m.unidad}</td>
+              <td class="num muted">${m.stockMin} / ${m.stockMax}</td>
+              <td>${stockBadge(m.stock,m.stockMin,m.stockMax)}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function toggleIngresoForm(){
+  const f = document.getElementById("ingresoForm");
+  f.style.display = f.style.display==="none" ? "block" : "none";
+}
+function registrarIngreso(){
+  const mId = parseInt(document.getElementById("inMateria").value);
+  const cant = parseFloat(document.getElementById("inCantidad").value)||0;
+  const precio = parseFloat(document.getElementById("inPrecio").value)||0;
+  const m = materiaPrima.find(x=>x.id===mId);
+  if(cant<=0){ showToast("Ingresá una cantidad válida"); return; }
+  m.stock += cant;
+  m.precioUnitario = precio;
+  showToast(`Ingreso registrado: +${cant} ${m.unidad} de ${m.nombre}`);
+  renderInsumos();
+}
+
+/* ---------------- PRODUCCIÓN ---------------- */
+function renderProduccion(){
+  document.getElementById("content").innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="eyebrow">Lotes</div>
+        <h1>Producción</h1>
+        <p>Registrá lotes a partir de una receta — descuenta insumos automáticamente.</p>
+      </div>
+      <button class="btn btn-primary" onclick="toggleLoteForm()">${ICONS.plus} Registrar lote</button>
+    </div>
+
+    <div class="card" id="loteForm" style="display:none;">
+      <h2>Nuevo lote de producción</h2>
+      <div class="form-grid">
+        <div class="field"><label>Receta</label>
+          <select id="loReceta" onchange="updateLotePreview()">${recetas.map(r=>`<option value="${r.id}">${r.nombre}</option>`).join("")}</select>
+        </div>
+        <div class="field"><label>Cantidad a producir (unidades)</label>
+          <input id="loCantidad" type="number" min="1" value="20" oninput="updateLotePreview()">
+        </div>
+      </div>
+      <div id="lotePreview" class="muted" style="font-size:12.5px;margin:10px 0 0;"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="toggleLoteForm()">Cancelar</button>
+        <button class="btn btn-primary" onclick="registrarLote()">Confirmar producción</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>Fecha</th><th>Receta</th><th>Cantidad</th><th>Costo total</th><th>Responsable</th></tr></thead>
+        <tbody>
+          ${loteProduccion.length ? [...loteProduccion].reverse().map(l=>{
+            const r = recetas.find(r=>r.id===l.recetaId);
+            return `<tr>
+              <td>${l.fecha}</td><td>${r?r.nombre:'—'}</td>
+              <td class="num">${l.cantidad}</td>
+              <td class="num">${fmtMoney(l.costoTotal)}</td>
+              <td class="muted">${l.usuario}</td>
+            </tr>`;
+          }).join("") : `<tr><td colspan="5">${emptyState("Todavía no se registraron lotes.")}</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+  updateLotePreview();
+}
+function toggleLoteForm(){
+  const f = document.getElementById("loteForm");
+  f.style.display = f.style.display==="none" ? "block" : "none";
+}
+function calcularLote(recetaId, cantidad){
+  const r = recetas.find(x=>x.id===recetaId);
+  const factor = cantidad / r.rendimiento;
+  const requerido = r.detalle.map(d=>{
+    const m = materiaPrima.find(x=>x.id===d.materiaPrimaId);
+    const cant = d.cantidad * factor;
+    return {materiaPrima:m, cantidad:cant, alcanza: m.stock >= cant};
+  });
+  const costoTotal = requerido.reduce((a,d)=>a + d.cantidad*d.materiaPrima.precioUnitario, 0);
+  return {r, requerido, costoTotal, alcanzaTodo: requerido.every(d=>d.alcanza)};
+}
+function updateLotePreview(){
+  const recetaId = parseInt(document.getElementById("loReceta").value);
+  const cantidad = parseFloat(document.getElementById("loCantidad").value)||0;
+  const {requerido, costoTotal, alcanzaTodo} = calcularLote(recetaId, cantidad);
+  document.getElementById("lotePreview").innerHTML =
+    `Insumos necesarios: ` + requerido.map(d=>`${d.materiaPrima.nombre} ${d.cantidad.toFixed(1)}${d.materiaPrima.unidad}${d.alcanza?'':' ⚠️'}`).join(" · ")
+    + ` — Costo estimado: <strong>${fmtMoney(costoTotal)}</strong>`
+    + (alcanzaTodo ? '' : ' <span style="color:var(--alert)">(stock insuficiente)</span>');
+}
+function registrarLote(){
+  const recetaId = parseInt(document.getElementById("loReceta").value);
+  const cantidad = parseFloat(document.getElementById("loCantidad").value)||0;
+  if(cantidad<=0){ showToast("Ingresá una cantidad válida"); return; }
+  const {r, requerido, costoTotal, alcanzaTodo} = calcularLote(recetaId, cantidad);
+  if(!alcanzaTodo){ showToast("No hay stock suficiente de insumos para este lote"); return; }
+  requerido.forEach(d=>{ d.materiaPrima.stock -= d.cantidad; });
+  const producto = productos.find(p=>p.id===r.productoId);
+  producto.stock += cantidad;
+  loteProduccion.push({id:loteProduccion.length+1, fecha:todayStr(), recetaId, cantidad, costoTotal, usuario:currentUser.nombre});
+  showToast(`Lote registrado: ${cantidad} u. de ${producto.nombre}`);
+  renderProduccion();
+}
+
+/* ---------------- VENTAS ---------------- */
+function renderVentas(){
+  document.getElementById("content").innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="eyebrow">Mostrador</div>
+        <h1>Ventas</h1>
+        <p>Registrá una venta y actualizá el stock de productos terminados.</p>
+      </div>
+      <button class="btn btn-primary" onclick="toggleVentaForm()">${ICONS.plus} Registrar venta</button>
+    </div>
+
+    <div class="card" id="ventaForm" style="display:none;">
+      <h2>Nueva venta</h2>
+      <div class="form-grid">
+        <div class="field"><label>Producto</label>
+          <select id="veProducto" onchange="updateVentaPreview()">${productos.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join("")}</select>
+        </div>
+        <div class="field"><label>Cantidad</label><input id="veCantidad" type="number" min="1" value="1" oninput="updateVentaPreview()"></div>
+      </div>
+      <div id="ventaPreview" class="muted" style="font-size:12.5px;margin:10px 0 0;"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="toggleVentaForm()">Cancelar</button>
+        <button class="btn btn-primary" onclick="registrarVenta()">Confirmar venta</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>Fecha</th><th>Producto</th><th>Cant.</th><th>Total</th><th>Vendedor</th></tr></thead>
+        <tbody>
+          ${ventas.length ? [...ventas].reverse().map(v=>{
+            const p = productos.find(p=>p.id===v.productoId);
+            return `<tr>
+              <td>${v.fecha}</td><td>${p?p.nombre:'—'}</td>
+              <td class="num">${v.cantidad}</td><td class="num">${fmtMoney(v.total)}</td>
+              <td class="muted">${v.usuario}</td>
+            </tr>`;
+          }).join("") : `<tr><td colspan="5">${emptyState("Todavía no hay ventas.")}</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+  updateVentaPreview();
+}
+function toggleVentaForm(){
+  const f = document.getElementById("ventaForm");
+  f.style.display = f.style.display==="none" ? "block" : "none";
+}
+function updateVentaPreview(){
+  const pId = parseInt(document.getElementById("veProducto").value);
+  const cant = parseFloat(document.getElementById("veCantidad").value)||0;
+  const p = productos.find(x=>x.id===pId);
+  const subtotal = p.precioVenta * cant;
+  const alcanza = p.stock >= cant;
+  document.getElementById("ventaPreview").innerHTML =
+    `Stock disponible: ${p.stock} u. — Subtotal: <strong>${fmtMoney(subtotal)}</strong>` +
+    (alcanza ? '' : ' <span style="color:var(--alert)">(stock insuficiente)</span>');
+}
+function registrarVenta(){
+  const pId = parseInt(document.getElementById("veProducto").value);
+  const cant = parseFloat(document.getElementById("veCantidad").value)||0;
+  const p = productos.find(x=>x.id===pId);
+  if(cant<=0){ showToast("Ingresá una cantidad válida"); return; }
+  if(p.stock < cant){ showToast("No hay stock suficiente de ese producto"); return; }
+  p.stock -= cant;
+  const total = p.precioVenta * cant;
+  ventas.push({id:ventas.length+1, fecha:todayStr(), productoId:pId, cantidad:cant, total, usuario:currentUser.nombre});
+  showToast(`Venta registrada: ${cant} u. de ${p.nombre}`);
+  renderVentas();
+}
+
+/* ---------------- ALERTAS ---------------- */
+function viewAlertas(){
+  const alertas = getAlertas();
+  return `
+    <div class="page-header">
+      <div>
+        <div class="eyebrow">Umbrales de stock</div>
+        <h1>Alertas</h1>
+        <p>Se generan automáticamente cuando un insumo o producto sale de su rango configurado.</p>
+      </div>
+    </div>
+    <div class="card">
+      ${alertas.length ? alertas.map(a=>`
+        <div class="alert-row ${a.tipo}">
+          ${ICONS.warn}
+          <div>
+            <div class="a-title">${a.nombre} <span class="badge badge-role" style="margin-left:6px;">${a.entidad}</span></div>
+            <div class="a-sub">${a.detalle}</div>
+          </div>
+        </div>
+      `).join("") : emptyState("Todo el stock está dentro de los umbrales configurados.", true)}
+    </div>
+  `;
+}
+
+/* ---------------- USUARIOS ---------------- */
+function renderUsuarios(){
+  document.getElementById("content").innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="eyebrow">Accesos</div>
+        <h1>Usuarios</h1>
+        <p>Solo visible para el rol Administrador.</p>
+      </div>
+      <button class="btn btn-primary" onclick="toggleUsuarioForm()">${ICONS.plus} Nuevo usuario</button>
+    </div>
+
+    <div class="card" id="usuarioForm" style="display:none;">
+      <h2>Nuevo usuario</h2>
+      <div class="form-grid">
+        <div class="field"><label>Nombre</label><input id="usNombre" type="text" placeholder="Nombre y apellido"></div>
+        <div class="field"><label>Email</label><input id="usEmail" type="email" placeholder="nombre@amasapan.com"></div>
+        <div class="field"><label>Rol</label>
+          <select id="usRol">${roles.map(r=>`<option>${r}</option>`).join("")}</select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="toggleUsuarioForm()">Cancelar</button>
+        <button class="btn btn-primary" onclick="registrarUsuario()">Guardar usuario</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+          ${usuarios.map(u=>`
+            <tr>
+              <td><strong>${u.nombre}</strong></td>
+              <td class="muted">${u.email}</td>
+              <td><span class="badge badge-role">${u.rol}</span></td>
+              <td>${u.activo?'<span class="badge badge-ok">Activo</span>':'<span class="badge badge-low">Inactivo</span>'}</td>
+              <td style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="toggleActivo(${u.id})">${u.activo?'Desactivar':'Activar'}</button></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+function toggleUsuarioForm(){
+  const f = document.getElementById("usuarioForm");
+  f.style.display = f.style.display==="none" ? "block" : "none";
+}
+function registrarUsuario(){
+  const nombre = document.getElementById("usNombre").value.trim();
+  const email = document.getElementById("usEmail").value.trim();
+  const rol = document.getElementById("usRol").value;
+  if(!nombre || !email){ showToast("Completá nombre y email"); return; }
+  usuarios.push({id:usuarios.length+1, nombre, email, rol, activo:true});
+  showToast(`Usuario creado: ${nombre}`);
+  renderUsuarios();
+  populateLoginSelect();
+}
+function toggleActivo(id){
+  const u = usuarios.find(x=>x.id===id);
+  u.activo = !u.activo;
+  renderUsuarios();
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+populateLoginSelect();
+</script>
+</body>
+</html>
