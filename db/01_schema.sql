@@ -30,3 +30,58 @@ CREATE TABLE usuario (
 );
 
 COMMENT ON COLUMN usuario.activo IS 'Indica si el usuario puede iniciar sesion';
+
+-- ------------------------------------------------------------
+-- Bloque 2: Insumos y proveedores
+-- ------------------------------------------------------------
+
+CREATE TABLE proveedor (
+    id_proveedor INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    razon_social VARCHAR(150) NOT NULL,
+    cuit         VARCHAR(13),
+    telefono     VARCHAR(20),
+    email        VARCHAR(150),
+    direccion    VARCHAR(150)
+);
+
+-- El CUIT es opcional, pero si esta cargado no puede repetirse
+CREATE UNIQUE INDEX uq_proveedor_cuit ON proveedor (cuit) WHERE cuit IS NOT NULL;
+
+CREATE TABLE materia_prima (
+    id_materia_prima      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre                VARCHAR(50)   NOT NULL,
+    unidad_medida         VARCHAR(10)   NOT NULL,
+    stock_actual          DECIMAL(10,2) NOT NULL DEFAULT 0,
+    stock_minimo          DECIMAL(10,2) NOT NULL,
+    stock_maximo          DECIMAL(10,2) NOT NULL,
+    costo_promedio        DECIMAL(10,2) NOT NULL DEFAULT 0,
+    id_proveedor_habitual INT,
+    CONSTRAINT ck_materia_prima_stock_actual   CHECK (stock_actual >= 0),
+    CONSTRAINT ck_materia_prima_stock_minimo   CHECK (stock_minimo >= 0),
+    CONSTRAINT ck_materia_prima_umbrales       CHECK (stock_maximo >= stock_minimo),
+    CONSTRAINT ck_materia_prima_costo          CHECK (costo_promedio >= 0),
+    CONSTRAINT fk_materia_prima_proveedor FOREIGN KEY (id_proveedor_habitual)
+        REFERENCES proveedor (id_proveedor) ON DELETE SET NULL
+);
+
+COMMENT ON COLUMN materia_prima.costo_promedio IS
+    'Promedio ponderado movil; se recalcula en cada ingreso de mercaderia';
+
+CREATE TABLE ingreso_materia_prima (
+    id_ingreso        INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cantidad          DECIMAL(10,2) NOT NULL,
+    precio_unitario   DECIMAL(10,2) NOT NULL,
+    fecha_ingreso     DATE          NOT NULL DEFAULT CURRENT_DATE,
+    fecha_vencimiento DATE,
+    id_materia_prima  INT           NOT NULL,
+    id_usuario        INT           NOT NULL,
+    id_proveedor      INT           NOT NULL,
+    CONSTRAINT ck_ingreso_cantidad CHECK (cantidad > 0),
+    CONSTRAINT ck_ingreso_precio   CHECK (precio_unitario >= 0),
+    CONSTRAINT fk_ingreso_materia_prima FOREIGN KEY (id_materia_prima)
+        REFERENCES materia_prima (id_materia_prima) ON DELETE RESTRICT,
+    CONSTRAINT fk_ingreso_usuario FOREIGN KEY (id_usuario)
+        REFERENCES usuario (id_usuario) ON DELETE RESTRICT,
+    CONSTRAINT fk_ingreso_proveedor FOREIGN KEY (id_proveedor)
+        REFERENCES proveedor (id_proveedor) ON DELETE RESTRICT
+);
