@@ -210,3 +210,31 @@ CREATE TABLE detalle_venta (
 
 COMMENT ON COLUMN detalle_venta.precio_unitario IS
     'Precio al momento de la venta; no cambia si luego se actualiza el producto';
+
+-- ------------------------------------------------------------
+-- Indices
+-- PostgreSQL indexa las claves primarias automaticamente, pero no las
+-- foraneas. Todas las consultas del sistema navegan esas relaciones,
+-- de modo que se indexan todas.
+-- ------------------------------------------------------------
+
+CREATE INDEX ix_usuario_rol                  ON usuario (id_rol);
+CREATE INDEX ix_materia_prima_proveedor      ON materia_prima (id_proveedor_habitual);
+CREATE INDEX ix_ingreso_materia_prima        ON ingreso_materia_prima (id_materia_prima);
+CREATE INDEX ix_ingreso_usuario              ON ingreso_materia_prima (id_usuario);
+CREATE INDEX ix_ingreso_proveedor            ON ingreso_materia_prima (id_proveedor);
+CREATE INDEX ix_receta_producto              ON receta (id_producto);
+CREATE INDEX ix_receta_detalle_receta        ON receta_detalle (id_receta);
+CREATE INDEX ix_receta_detalle_materia_prima ON receta_detalle (id_materia_prima);
+CREATE INDEX ix_lote_receta                  ON lote_produccion (id_receta);
+CREATE INDEX ix_lote_usuario                 ON lote_produccion (id_usuario);
+CREATE INDEX ix_consumo_lote                 ON consumo_materia_prima (id_lote);
+CREATE INDEX ix_consumo_materia_prima        ON consumo_materia_prima (id_materia_prima);
+CREATE INDEX ix_venta_usuario                ON venta (id_usuario);
+CREATE INDEX ix_detalle_venta_venta          ON detalle_venta (id_venta);
+CREATE INDEX ix_detalle_venta_producto       ON detalle_venta (id_producto);
+
+-- Indices por fecha, usados por el panel de control para filtrar por periodo
+CREATE INDEX ix_venta_fecha   ON venta (fecha);
+CREATE INDEX ix_lote_fecha    ON lote_produccion (fecha);
+CREATE INDEX ix_ingreso_fecha ON ingreso_materia_prima (fecha_ingreso);
