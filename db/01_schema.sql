@@ -130,3 +130,48 @@ CREATE TABLE receta_detalle (
     CONSTRAINT fk_receta_detalle_materia_prima FOREIGN KEY (id_materia_prima)
         REFERENCES materia_prima (id_materia_prima) ON DELETE RESTRICT
 );
+
+-- ------------------------------------------------------------
+-- Bloque 4: Produccion y consumo de insumos
+-- ------------------------------------------------------------
+
+CREATE TABLE lote_produccion (
+    id_lote            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha              DATE          NOT NULL DEFAULT CURRENT_DATE,
+    cantidad_producida INT           NOT NULL,
+    costo_total        DECIMAL(10,2) NOT NULL DEFAULT 0,
+    id_receta          INT           NOT NULL,
+    id_usuario         INT           NOT NULL,
+    CONSTRAINT ck_lote_cantidad CHECK (cantidad_producida > 0),
+    CONSTRAINT ck_lote_costo    CHECK (costo_total >= 0),
+    CONSTRAINT fk_lote_receta FOREIGN KEY (id_receta)
+        REFERENCES receta (id_receta) ON DELETE RESTRICT,
+    CONSTRAINT fk_lote_usuario FOREIGN KEY (id_usuario)
+        REFERENCES usuario (id_usuario) ON DELETE RESTRICT
+);
+
+COMMENT ON COLUMN lote_produccion.costo_total IS
+    'Suma de los subtotales de consumo_materia_prima del lote';
+
+CREATE TABLE consumo_materia_prima (
+    id_consumo       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cantidad         DECIMAL(10,2) NOT NULL,
+    costo_unitario   DECIMAL(10,2) NOT NULL,
+    subtotal         DECIMAL(10,2) NOT NULL,
+    id_lote          INT           NOT NULL,
+    id_materia_prima INT           NOT NULL,
+    CONSTRAINT ck_consumo_cantidad CHECK (cantidad > 0),
+    CONSTRAINT ck_consumo_costo    CHECK (costo_unitario >= 0),
+    CONSTRAINT ck_consumo_subtotal CHECK (subtotal >= 0),
+    CONSTRAINT uq_consumo_lote_insumo UNIQUE (id_lote, id_materia_prima),
+    CONSTRAINT fk_consumo_lote FOREIGN KEY (id_lote)
+        REFERENCES lote_produccion (id_lote) ON DELETE CASCADE,
+    CONSTRAINT fk_consumo_materia_prima FOREIGN KEY (id_materia_prima)
+        REFERENCES materia_prima (id_materia_prima) ON DELETE RESTRICT
+);
+
+COMMENT ON TABLE consumo_materia_prima IS
+    'Registro historico de insumos consumidos por lote; conserva el costo aunque la receta cambie despues';
+
+COMMENT ON COLUMN consumo_materia_prima.costo_unitario IS
+    'Promedio ponderado de la materia prima al momento de producir el lote';
