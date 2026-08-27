@@ -175,3 +175,38 @@ COMMENT ON TABLE consumo_materia_prima IS
 
 COMMENT ON COLUMN consumo_materia_prima.costo_unitario IS
     'Promedio ponderado de la materia prima al momento de producir el lote';
+
+-- ------------------------------------------------------------
+-- Bloque 5: Ventas
+-- ------------------------------------------------------------
+
+CREATE TABLE venta (
+    id_venta   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    total      DECIMAL(10,2) NOT NULL DEFAULT 0,
+    id_usuario INT           NOT NULL,
+    CONSTRAINT ck_venta_total CHECK (total >= 0),
+    CONSTRAINT fk_venta_usuario FOREIGN KEY (id_usuario)
+        REFERENCES usuario (id_usuario) ON DELETE RESTRICT
+);
+
+COMMENT ON COLUMN venta.total IS 'Suma de los subtotales de detalle_venta';
+
+CREATE TABLE detalle_venta (
+    id_detalle_venta INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cantidad         INT           NOT NULL,
+    precio_unitario  DECIMAL(10,2) NOT NULL,
+    subtotal         DECIMAL(10,2) NOT NULL,
+    id_venta         INT           NOT NULL,
+    id_producto      INT           NOT NULL,
+    CONSTRAINT ck_detalle_venta_cantidad CHECK (cantidad > 0),
+    CONSTRAINT ck_detalle_venta_precio   CHECK (precio_unitario >= 0),
+    CONSTRAINT ck_detalle_venta_subtotal CHECK (subtotal >= 0),
+    CONSTRAINT fk_detalle_venta_venta FOREIGN KEY (id_venta)
+        REFERENCES venta (id_venta) ON DELETE CASCADE,
+    CONSTRAINT fk_detalle_venta_producto FOREIGN KEY (id_producto)
+        REFERENCES producto (id_producto) ON DELETE RESTRICT
+);
+
+COMMENT ON COLUMN detalle_venta.precio_unitario IS
+    'Precio al momento de la venta; no cambia si luego se actualiza el producto';
