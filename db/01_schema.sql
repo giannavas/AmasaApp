@@ -85,3 +85,48 @@ CREATE TABLE ingreso_materia_prima (
     CONSTRAINT fk_ingreso_proveedor FOREIGN KEY (id_proveedor)
         REFERENCES proveedor (id_proveedor) ON DELETE RESTRICT
 );
+
+-- ------------------------------------------------------------
+-- Bloque 3: Productos y recetas
+-- ------------------------------------------------------------
+
+CREATE TABLE producto (
+    id_producto   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre        VARCHAR(50)   NOT NULL,
+    descripcion   VARCHAR(255),
+    stock_actual  INT           NOT NULL DEFAULT 0,
+    precio_venta  DECIMAL(10,2) NOT NULL,
+    stock_minimo  INT           NOT NULL,
+    stock_maximo  INT           NOT NULL,
+    CONSTRAINT ck_producto_stock_actual CHECK (stock_actual >= 0),
+    CONSTRAINT ck_producto_stock_minimo CHECK (stock_minimo >= 0),
+    CONSTRAINT ck_producto_umbrales     CHECK (stock_maximo >= stock_minimo),
+    CONSTRAINT ck_producto_precio       CHECK (precio_venta >= 0)
+);
+
+CREATE TABLE receta (
+    id_receta            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre               VARCHAR(50) NOT NULL,
+    rendimiento_unidades INT         NOT NULL,
+    id_producto          INT         NOT NULL,
+    CONSTRAINT ck_receta_rendimiento CHECK (rendimiento_unidades > 0),
+    CONSTRAINT uq_receta_producto UNIQUE (id_producto),
+    CONSTRAINT fk_receta_producto FOREIGN KEY (id_producto)
+        REFERENCES producto (id_producto) ON DELETE RESTRICT
+);
+
+COMMENT ON CONSTRAINT uq_receta_producto ON receta IS
+    'La relacion producto-receta es 1:1 segun el diseno de clases';
+
+CREATE TABLE receta_detalle (
+    id_receta_detalle  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cantidad_requerida DECIMAL(10,2) NOT NULL,
+    id_receta          INT           NOT NULL,
+    id_materia_prima   INT           NOT NULL,
+    CONSTRAINT ck_receta_detalle_cantidad CHECK (cantidad_requerida > 0),
+    CONSTRAINT uq_receta_detalle_insumo UNIQUE (id_receta, id_materia_prima),
+    CONSTRAINT fk_receta_detalle_receta FOREIGN KEY (id_receta)
+        REFERENCES receta (id_receta) ON DELETE CASCADE,
+    CONSTRAINT fk_receta_detalle_materia_prima FOREIGN KEY (id_materia_prima)
+        REFERENCES materia_prima (id_materia_prima) ON DELETE RESTRICT
+);
