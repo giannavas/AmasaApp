@@ -1,0 +1,20 @@
+{
+  "name": "amasaapp-backend",
+  "version": "0.1.0",
+  "description": "Backend de AmasaApp - sistema de gestion para la panificadora AmasaPan",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --env-file=.env src/server.js",
+    "dev": "node --env-file=.env --watch src/server.js",
+    "test": "node --env-file=.env --test"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.13.1"
+  },
+  "private": true
+}
