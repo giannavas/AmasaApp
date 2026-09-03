@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node --env-file=.env src/server.js",
     "dev": "node --env-file=.env --watch src/server.js",
-    "test": "node --env-file=.env --test"
+    "test": "node --env-file=.env --test",
+    "crear-usuario": "node --env-file=.env scripts/crear-usuario.js"
   },
   "engines": {
     "node": ">=20.6.0"

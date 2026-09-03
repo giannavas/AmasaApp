@@ -1,5 +1,6 @@
 import express from 'express';
 import { consultar } from './config/db.js';
+import { rutasSesion } from './rutas/sesion.js';
 
 /**
  * La aplicacion Express, separada del arranque del servidor.
@@ -10,6 +11,9 @@ import { consultar } from './config/db.js';
 export const app = express();
 
 app.use(express.json());
+
+// CU-01 y CU-02: sesion de usuario
+app.use('/api/sesion', rutasSesion);
 
 /**
  * Verificacion de estado. Confirma que la API responde y que la base de datos
