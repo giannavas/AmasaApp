@@ -56,3 +56,15 @@ button { font: inherit; cursor: pointer; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Boton base. Las variantes (primario, secundario) las define cada pantalla. */
+.boton {
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-base);
+  font-weight: 600;
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid transparent;
+  border-radius: var(--radio-sm);
+  cursor: pointer;
+}
+.boton:focus-visible { outline: 2px solid var(--color-primario); outline-offset: 2px; }

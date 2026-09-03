@@ -1,16 +1,20 @@
-/* Pantalla de verificacion del entorno. Provisoria: la reemplaza
-   el inicio de sesion (CU-01) en el Sprint 1. */
+.cargando {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--color-texto-suave);
+}
 
-.pantalla-estado {
+.sesion-abierta {
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: var(--esp-6) var(--esp-4);
 }
 
-.pantalla-estado__marco { width: 100%; max-width: 30rem; }
+.sesion-abierta__marco { width: 100%; max-width: 26rem; }
 
-.marca { margin-bottom: var(--esp-6); }
+.marca { margin-bottom: var(--esp-5); }
 .marca h1 { margin-bottom: var(--esp-1); }
 .marca p { color: var(--color-texto-suave); font-size: var(--tam-sm); }
 
@@ -30,37 +34,39 @@
   margin-bottom: var(--esp-4);
 }
 
-.capas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-3); }
-
-.capa { display: flex; align-items: center; gap: var(--esp-3); }
-
-.etiqueta {
-  font-size: var(--tam-xs);
-  font-weight: 600;
-  padding: var(--esp-1) var(--esp-2);
-  border-radius: var(--radio-pill);
-  background: var(--color-ok-fondo);
-  color: var(--color-ok);
+/* Pares rotulo-valor en dos columnas: el rotulo fija su ancho al contenido
+   y el valor ocupa el resto, de modo que todos los valores se alinean. */
+.datos-usuario {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--esp-2) var(--esp-4);
+  margin: 0 0 var(--esp-5);
 }
 
-.etiqueta--error { background: var(--color-error-fondo); color: var(--color-error); }
+.datos-usuario dt {
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  align-self: center;
+}
 
-.hora {
+.datos-usuario dd { margin: 0; font-weight: 500; }
+
+/* Se declara el borde completo, no solo su color: la regla base usa la
+   forma abreviada 'border', y segun el orden en que se combinen las hojas
+   de estilo podria ganar su borde transparente y el boton quedaria sin
+   contorno, indistinguible de un texto suelto. */
+.boton--secundario {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+}
+.boton--secundario:hover { background: var(--color-fondo); }
+
+.proximo {
   margin-top: var(--esp-4);
-  padding-top: var(--esp-3);
-  border-top: 1px solid var(--color-borde);
   color: var(--color-texto-suave);
   font-size: var(--tam-sm);
-}
-
-.aviso-error { color: var(--color-error); font-weight: 600; }
-.aviso-detalle { color: var(--color-texto-suave); font-size: var(--tam-sm); margin-top: var(--esp-2); }
-
-code {
-  font-family: var(--fuente-datos);
-  font-size: 0.9em;
-  background: var(--color-fondo);
-  border: 1px solid var(--color-borde);
-  padding: 0.1em 0.4em;
-  border-radius: var(--radio-sm);
 }
