@@ -1,0 +1,66 @@
+/* Pantalla de verificacion del entorno. Provisoria: la reemplaza
+   el inicio de sesion (CU-01) en el Sprint 1. */
+
+.pantalla-estado {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--esp-6) var(--esp-4);
+}
+
+.pantalla-estado__marco { width: 100%; max-width: 30rem; }
+
+.marca { margin-bottom: var(--esp-6); }
+.marca h1 { margin-bottom: var(--esp-1); }
+.marca p { color: var(--color-texto-suave); font-size: var(--tam-sm); }
+
+.panel {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-5);
+}
+
+.panel__titulo {
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  margin-bottom: var(--esp-4);
+}
+
+.capas { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--esp-3); }
+
+.capa { display: flex; align-items: center; gap: var(--esp-3); }
+
+.etiqueta {
+  font-size: var(--tam-xs);
+  font-weight: 600;
+  padding: var(--esp-1) var(--esp-2);
+  border-radius: var(--radio-pill);
+  background: var(--color-ok-fondo);
+  color: var(--color-ok);
+}
+
+.etiqueta--error { background: var(--color-error-fondo); color: var(--color-error); }
+
+.hora {
+  margin-top: var(--esp-4);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--color-borde);
+  color: var(--color-texto-suave);
+  font-size: var(--tam-sm);
+}
+
+.aviso-error { color: var(--color-error); font-weight: 600; }
+.aviso-detalle { color: var(--color-texto-suave); font-size: var(--tam-sm); margin-top: var(--esp-2); }
+
+code {
+  font-family: var(--fuente-datos);
+  font-size: 0.9em;
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radio-sm);
+}

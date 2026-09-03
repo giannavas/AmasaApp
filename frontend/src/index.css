@@ -1,44 +1,58 @@
-:root {
-  --fondo: #faf7f2;
-  --texto: #2b2622;
-  --tenue: #6b6055;
-  --borde: #e3dbd0;
-  --ok: #2e7d32;
-  --error: #b3261e;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-}
+@import "./estilos/tokens.css";
 
-* { box-sizing: border-box; }
+/* ============================================================
+   Estilos base. Solo lo que aplica a toda la aplicacion:
+   reset, tipografia y elementos nativos. Lo especifico de cada
+   pantalla vive con su componente.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--fondo);
-  color: var(--texto);
-  display: grid;
-  place-items: center;
-  padding: 2rem 1rem;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-.contenedor { width: 100%; max-width: 32rem; }
-
-h1 { margin: 0; font-size: 2rem; letter-spacing: -0.02em; }
-.subtitulo { margin: 0.25rem 0 2rem; color: var(--tenue); }
-
-.tarjeta {
-  background: #fff;
-  border: 1px solid var(--borde);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+h1, h2, h3 {
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  text-wrap: balance;
 }
 
-.tarjeta h2 { margin: 0 0 1rem; font-size: 1rem; text-transform: uppercase;
-              letter-spacing: 0.06em; color: var(--tenue); }
+h1 { font-size: var(--tam-3xl); letter-spacing: -0.01em; }
+h2 { font-size: var(--tam-xl); }
+h3 { font-size: var(--tam-lg); }
 
-.lista-estado { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-.ok { color: var(--ok); font-weight: 600; margin-right: 0.5rem; }
-.error { color: var(--error); font-weight: 600; margin: 0; }
-.detalle, .ayuda { color: var(--tenue); font-size: 0.875rem; }
-.hora { color: var(--tenue); font-size: 0.875rem; padding-top: 0.4rem;
-        border-top: 1px solid var(--borde); }
-code { background: var(--fondo); padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
+p { margin: 0; }
+
+/* Los numeros que se comparan en columna van en monoespaciada y
+   con ancho fijo de digito, para que las unidades se alineen. */
+.dato {
+  font-family: var(--fuente-datos);
+  font-variant-numeric: tabular-nums;
+}
+
+/* El foco del teclado tiene que verse siempre: hay usuarios que
+   operan el sistema sin mouse. */
+:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
+  border-radius: var(--radio-sm);
+}
+
+button { font: inherit; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

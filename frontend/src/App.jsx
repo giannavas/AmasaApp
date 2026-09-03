@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
+import './App.css';
 
 /**
  * Pantalla de verificacion del entorno.
  *
- * Es provisoria: existe para confirmar que el frontend, el backend y la base
- * de datos se comunican entre si. En el Sprint 1 la reemplaza la pantalla de
- * inicio de sesion (CU-01).
+ * Confirma que el frontend, el backend y la base de datos se comunican entre
+ * si. Es provisoria: en el Sprint 1 la reemplaza el inicio de sesion (CU-01).
  */
 export default function App() {
   const [estado, setEstado] = useState({ cargando: true });
@@ -22,36 +22,54 @@ export default function App() {
   }, []);
 
   return (
-    <main className="contenedor">
-      <h1>AmasaApp</h1>
-      <p className="subtitulo">Sistema de administracion de panificadora</p>
+    <main className="pantalla-estado">
+      <div className="pantalla-estado__marco">
+        <header className="marca">
+          <h1>AmasaApp</h1>
+          <p>Panificadora AmasaPan</p>
+        </header>
 
-      <section className="tarjeta">
-        <h2>Estado del entorno</h2>
+        <section className="panel">
+          <h2 className="panel__titulo">Estado del entorno</h2>
 
-        {estado.cargando && <p>Verificando la conexion...</p>}
+          {estado.cargando && <p>Verificando la conexion...</p>}
 
-        {estado.error && (
-          <>
-            <p className="error">Sin conexion con el backend</p>
-            <p className="detalle">{estado.error}</p>
-            <p className="ayuda">
-              Verifica que el backend este corriendo: <code>cd backend &amp;&amp; npm start</code>
-            </p>
-          </>
-        )}
+          {estado.error && (
+            <>
+              <p className="aviso-error">Sin conexion con el backend</p>
+              <p className="aviso-detalle">{estado.error}</p>
+              <p className="aviso-detalle">
+                Levanta el servidor con <code>cd backend &amp;&amp; npm run dev</code>
+              </p>
+            </>
+          )}
 
-        {estado.datos && (
-          <ul className="lista-estado">
-            <li><span className="ok">OK</span> Frontend (React + Vite)</li>
-            <li><span className="ok">OK</span> Backend (Express)</li>
-            <li>
-              <span className="ok">OK</span> Base de datos ({estado.datos.baseDeDatos})
-            </li>
-            <li className="hora">Hora del servidor: {estado.datos.hora}</li>
-          </ul>
-        )}
-      </section>
+          {estado.datos && (
+            <>
+              <ul className="capas">
+                <li className="capa">
+                  <span className="etiqueta">Activo</span>
+                  <span>Frontend — React y Vite</span>
+                </li>
+                <li className="capa">
+                  <span className="etiqueta">Activo</span>
+                  <span>Backend — Express</span>
+                </li>
+                <li className="capa">
+                  <span className="etiqueta">Activo</span>
+                  <span>Base de datos — PostgreSQL</span>
+                </li>
+              </ul>
+              <p className="hora">
+                Hora del servidor{' '}
+                <span className="dato">
+                  {new Date(estado.datos.hora).toLocaleString('es-AR')}
+                </span>
+              </p>
+            </>
+          )}
+        </section>
+      </div>
     </main>
   );
 }
