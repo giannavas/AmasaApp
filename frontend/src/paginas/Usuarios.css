@@ -1,0 +1,114 @@
+.usuarios { display: grid; gap: var(--esp-5); }
+
+.usuarios__encabezado {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  flex-wrap: wrap;
+}
+
+.usuarios__ayuda {
+  color: var(--color-texto-suave);
+  font-size: var(--tam-sm);
+  margin-top: var(--esp-1);
+  max-width: 34rem;
+}
+
+.usuarios__error {
+  color: var(--color-error);
+  background: var(--color-error-fondo);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radio-sm);
+  padding: var(--esp-2) var(--esp-3);
+  font-size: var(--tam-sm);
+  font-weight: 600;
+}
+
+.usuarios__formulario {
+  display: grid;
+  gap: var(--esp-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-5);
+}
+
+.usuarios__acciones-formulario {
+  display: flex;
+  gap: var(--esp-2);
+  flex-wrap: wrap;
+}
+
+/* La tabla no se achica ni se parte en pantallas angostas: se desplaza
+   dentro de su propio marco, asi la pagina nunca scrollea en horizontal. */
+.tabla-envoltorio {
+  overflow-x: auto;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--tam-sm);
+}
+
+.tabla th {
+  text-align: left;
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  font-weight: 600;
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  vertical-align: middle;
+}
+
+.tabla tr:last-child td { border-bottom: none; }
+
+.tabla__acciones {
+  display: flex;
+  gap: var(--esp-2);
+  justify-content: end;
+  flex-wrap: wrap;
+}
+
+.boton--chico {
+  font-size: var(--tam-xs);
+  padding: var(--esp-1) var(--esp-3);
+}
+
+/* Etiqueta de estado. Siempre lleva texto ademas del color: cerca del 8 %
+   de los varones no distingue rojo de verde, y con el color solo la columna
+   quedaria vacia para ellos. */
+.etiqueta {
+  display: inline-block;
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: var(--esp-1) var(--esp-3);
+  border-radius: var(--radio-pill);
+  white-space: nowrap;
+}
+
+.etiqueta--ok {
+  color: var(--color-ok);
+  background: var(--color-ok-fondo);
+}
+
+.etiqueta--inactivo {
+  color: var(--color-texto-suave);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+}

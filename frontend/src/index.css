@@ -57,7 +57,9 @@ button { font: inherit; cursor: pointer; }
   }
 }
 
-/* Boton base. Las variantes (primario, secundario) las define cada pantalla. */
+/* Boton base y sus variantes. Viven aca y no en la hoja de una pantalla
+   porque las usan todas: si quedaran en Login.css, cualquier pantalla que
+   se cargue sin el login se quedaria sin botones. */
 .boton {
   font-family: var(--fuente-texto);
   font-size: var(--tam-base);
@@ -68,3 +70,64 @@ button { font: inherit; cursor: pointer; }
   cursor: pointer;
 }
 .boton:focus-visible { outline: 2px solid var(--color-primario); outline-offset: 2px; }
+.boton:disabled { opacity: 0.6; cursor: default; }
+
+.boton--primario { background: var(--color-primario); color: #fff; }
+.boton--primario:hover:not(:disabled) { background: var(--color-primario-hover); }
+
+/* Se declara el borde completo, no solo su color: la regla base usa la forma
+   abreviada 'border', y segun el orden en que se combinen las hojas de estilo
+   podria ganar su borde transparente y el boton quedaria sin contorno,
+   indistinguible de un texto suelto. */
+.boton--secundario {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+}
+.boton--secundario:hover:not(:disabled) { background: var(--color-fondo); }
+
+/* Campos de formulario. Tambien compartidos por todas las pantallas. */
+.campo { display: grid; gap: var(--esp-1); }
+
+.campo label {
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+}
+
+.campo input,
+.campo select {
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-base);
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  padding: var(--esp-2) var(--esp-3);
+}
+
+.campo input:focus-visible,
+.campo select:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 1px;
+}
+
+.campo__pista {
+  font-size: var(--tam-xs);
+  color: var(--color-texto-suave);
+}
+
+/* Texto que solo leen los lectores de pantalla. Se usa para rotular columnas
+   cuyo encabezado no hace falta ver, como la de los botones de accion. */
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

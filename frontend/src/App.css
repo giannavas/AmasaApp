@@ -5,24 +5,78 @@
   color: var(--color-texto-suave);
 }
 
-.sesion-abierta {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: var(--esp-6) var(--esp-4);
+.aplicacion { min-height: 100vh; }
+
+/* ---------------------------------------------------------- barra superior */
+
+.barra {
+  background: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
 }
 
-.sesion-abierta__marco { width: 100%; max-width: 26rem; }
+.barra__marco {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: var(--esp-3) var(--esp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  flex-wrap: wrap;
+}
 
-.marca { margin-bottom: var(--esp-5); }
-.marca h1 { margin-bottom: var(--esp-1); }
-.marca p { color: var(--color-texto-suave); font-size: var(--tam-sm); }
+.marca h1 { font-size: var(--tam-xl); margin-bottom: 0; }
+.marca p { color: var(--color-texto-suave); font-size: var(--tam-xs); }
+
+.navegacion { display: flex; gap: var(--esp-1); }
+
+/* Son botones y no enlaces porque todavia no hay rutas: cambian el estado de
+   la aplicacion, no la direccion. Cuando haya rutas pasan a ser enlaces. */
+.navegacion__enlace {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radio-sm);
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-sm);
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  padding: var(--esp-2) var(--esp-3);
+}
+
+.navegacion__enlace:hover { color: var(--color-texto); background: var(--color-fondo); }
+
+.navegacion__enlace--activo {
+  color: var(--color-primario);
+  background: var(--color-fondo);
+  border-color: var(--color-borde);
+}
+
+.barra__sesion {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  flex-wrap: wrap;
+}
+
+.barra__usuario {
+  font-size: var(--tam-sm);
+  color: var(--color-texto-suave);
+}
+
+/* ---------------------------------------------------------------- contenido */
+
+.contenido {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: var(--esp-6) var(--esp-4);
+}
 
 .panel {
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-md);
   padding: var(--esp-5);
+  max-width: 26rem;
 }
 
 .panel__titulo {
@@ -40,7 +94,7 @@
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--esp-2) var(--esp-4);
-  margin: 0 0 var(--esp-5);
+  margin: 0;
 }
 
 .datos-usuario dt {
@@ -54,19 +108,8 @@
 
 .datos-usuario dd { margin: 0; font-weight: 500; }
 
-/* Se declara el borde completo, no solo su color: la regla base usa la
-   forma abreviada 'border', y segun el orden en que se combinen las hojas
-   de estilo podria ganar su borde transparente y el boton quedaria sin
-   contorno, indistinguible de un texto suelto. */
-.boton--secundario {
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  color: var(--color-texto);
-}
-.boton--secundario:hover { background: var(--color-fondo); }
-
 .proximo {
-  margin-top: var(--esp-4);
+  margin-top: var(--esp-5);
   color: var(--color-texto-suave);
   font-size: var(--tam-sm);
 }

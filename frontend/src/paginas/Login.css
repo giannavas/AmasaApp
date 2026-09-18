@@ -20,31 +20,6 @@
 .login__marca h1 { font-size: var(--tam-2xl); }
 .login__marca p { color: var(--color-texto-suave); font-size: var(--tam-sm); }
 
-.campo { display: grid; gap: var(--esp-1); }
-
-.campo label {
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--color-texto-suave);
-}
-
-.campo input {
-  font-family: var(--fuente-texto);
-  font-size: var(--tam-base);
-  color: var(--color-texto);
-  background: var(--color-fondo);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-sm);
-  padding: var(--esp-2) var(--esp-3);
-}
-
-.campo input:focus-visible {
-  outline: 2px solid var(--color-primario);
-  outline-offset: 1px;
-}
-
 /* El espacio del error se reserva siempre, aunque este vacio: asi el
    formulario no salta hacia abajo cuando aparece el mensaje. */
 .login__error {
@@ -54,18 +29,3 @@
   font-weight: 600;
   margin: 0;
 }
-
-.boton {
-  font-family: var(--fuente-texto);
-  font-size: var(--tam-base);
-  font-weight: 600;
-  padding: var(--esp-2) var(--esp-4);
-  border: 1px solid transparent;
-  border-radius: var(--radio-sm);
-  cursor: pointer;
-}
-
-.boton--primario { background: var(--color-primario); color: #fff; }
-.boton--primario:hover:not(:disabled) { background: var(--color-primario-hover); }
-.boton:disabled { opacity: 0.6; cursor: default; }
-.boton:focus-visible { outline: 2px solid var(--color-primario); outline-offset: 2px; }

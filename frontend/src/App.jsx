@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { obtenerSesion, cerrarSesion } from './api/sesion.js';
 import Login from './paginas/Login.jsx';
+import Usuarios from './paginas/Usuarios.jsx';
 import './App.css';
 
 /**
@@ -13,6 +14,7 @@ import './App.css';
 export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [verificando, setVerificando] = useState(true);
+  const [pantalla, setPantalla] = useState('inicio');
 
   useEffect(() => {
     obtenerSesion()
@@ -23,6 +25,7 @@ export default function App() {
   async function salir() {
     await cerrarSesion();
     setUsuario(null);
+    setPantalla('inicio');
   }
 
   if (verificando) {
@@ -37,30 +40,68 @@ export default function App() {
     return <Login alEntrar={setUsuario} />;
   }
 
+  // CU-02 es solo del Encargado. El backend lo verifica igual en cada pedido:
+  // esconder el enlace evita el clic inutil, no es la medida de seguridad.
+  const esEncargado = usuario.rol === 'Encargado';
+
   return (
-    <main className="sesion-abierta">
-      <div className="sesion-abierta__marco">
-        <header className="marca">
-          <h1>AmasaApp</h1>
-          <p>Panificadora AmasaPan</p>
-        </header>
+    <div className="aplicacion">
+      <header className="barra">
+        <div className="barra__marco">
+          <div className="marca">
+            <h1>AmasaApp</h1>
+            <p>Panificadora AmasaPan</p>
+          </div>
 
-        <section className="panel">
-          <h2 className="panel__titulo">Sesion iniciada</h2>
-          <dl className="datos-usuario">
-            <dt>Usuario</dt><dd>{usuario.nombre}</dd>
-            <dt>Correo</dt><dd>{usuario.email}</dd>
-            <dt>Rol</dt><dd>{usuario.rol}</dd>
-          </dl>
-          <button className="boton boton--secundario" onClick={salir}>
-            Cerrar sesion
-          </button>
-        </section>
+          <nav className="navegacion" aria-label="Secciones">
+            <button
+              className={`navegacion__enlace ${pantalla === 'inicio' ? 'navegacion__enlace--activo' : ''}`}
+              onClick={() => setPantalla('inicio')}
+              aria-current={pantalla === 'inicio' ? 'page' : undefined}
+            >
+              Inicio
+            </button>
 
-        <p className="proximo">
-          Las pantallas del sistema se incorporan en los sprints siguientes.
-        </p>
-      </div>
-    </main>
+            {esEncargado && (
+              <button
+                className={`navegacion__enlace ${pantalla === 'usuarios' ? 'navegacion__enlace--activo' : ''}`}
+                onClick={() => setPantalla('usuarios')}
+                aria-current={pantalla === 'usuarios' ? 'page' : undefined}
+              >
+                Usuarios
+              </button>
+            )}
+          </nav>
+
+          <div className="barra__sesion">
+            <span className="barra__usuario">
+              {usuario.nombre} · {usuario.rol}
+            </span>
+            <button className="boton boton--secundario boton--chico" onClick={salir}>
+              Cerrar sesion
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="contenido">
+        {pantalla === 'usuarios' && esEncargado ? (
+          <Usuarios usuarioActual={usuario} />
+        ) : (
+          <section className="panel">
+            <h2 className="panel__titulo">Sesion iniciada</h2>
+            <dl className="datos-usuario">
+              <dt>Usuario</dt><dd>{usuario.nombre}</dd>
+              <dt>Correo</dt><dd>{usuario.email}</dd>
+              <dt>Rol</dt><dd>{usuario.rol}</dd>
+            </dl>
+            <p className="proximo">
+              Las pantallas de insumos, produccion y ventas se incorporan en los
+              sprints siguientes.
+            </p>
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
