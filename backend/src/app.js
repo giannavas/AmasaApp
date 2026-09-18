@@ -1,6 +1,7 @@
 import express from 'express';
 import { consultar } from './config/db.js';
 import { rutasSesion } from './rutas/sesion.js';
+import { rutasUsuarios } from './rutas/usuarios.js';
 
 /**
  * La aplicacion Express, separada del arranque del servidor.
@@ -12,8 +13,11 @@ export const app = express();
 
 app.use(express.json());
 
-// CU-01 y CU-02: sesion de usuario
+// CU-01: sesion de usuario
 app.use('/api/sesion', rutasSesion);
+
+// CU-02: gestion de usuarios, solo para el Encargado
+app.use('/api/usuarios', rutasUsuarios);
 
 /**
  * Verificacion de estado. Confirma que la API responde y que la base de datos
