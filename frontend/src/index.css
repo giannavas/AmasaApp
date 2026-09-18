@@ -131,3 +131,154 @@ button { font: inherit; cursor: pointer; }
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* ============================================================
+   Componentes compartidos por las pantallas de administracion
+   (usuarios, proveedores, insumos). Viven aca y no en la hoja
+   de una pantalla porque las tres arman la misma estructura:
+   encabezado, formulario y tabla.
+   ============================================================ */
+
+.seccion { display: grid; gap: var(--esp-5); }
+
+.seccion__encabezado {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--esp-4);
+  flex-wrap: wrap;
+}
+
+.seccion__ayuda {
+  color: var(--color-texto-suave);
+  font-size: var(--tam-sm);
+  margin-top: var(--esp-1);
+  max-width: 34rem;
+}
+
+.mensaje-error {
+  color: var(--color-error);
+  background: var(--color-error-fondo);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radio-sm);
+  padding: var(--esp-2) var(--esp-3);
+  font-size: var(--tam-sm);
+  font-weight: 600;
+}
+
+.mensaje-vacio {
+  color: var(--color-texto-suave);
+  font-size: var(--tam-sm);
+  padding: var(--esp-5);
+  text-align: center;
+}
+
+/* ---------------------------------------------------- formularios en panel */
+
+.formulario-panel {
+  display: grid;
+  gap: var(--esp-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-5);
+}
+
+/* Los campos se acomodan en columnas segun el ancho disponible. Un formulario
+   de una sola columna obliga a scrollear de mas cuando tiene muchos campos. */
+.formulario-panel__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--esp-4);
+}
+
+.formulario-panel__acciones {
+  display: flex;
+  gap: var(--esp-2);
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------- tablas */
+
+/* La tabla no se achica ni se parte en pantallas angostas: se desplaza dentro
+   de su propio marco, asi la pagina nunca scrollea en horizontal. */
+.tabla-envoltorio {
+  overflow-x: auto;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--tam-sm);
+}
+
+.tabla th {
+  text-align: left;
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  font-weight: 600;
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  vertical-align: middle;
+}
+
+.tabla tr:last-child td { border-bottom: none; }
+
+/* Los numeros se alinean a la derecha y en monoespaciada de ancho fijo, para
+   poder comparar las magnitudes de un vistazo leyendo la columna. */
+.tabla .numero {
+  text-align: right;
+  font-family: var(--fuente-datos);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tabla__acciones {
+  display: flex;
+  gap: var(--esp-2);
+  justify-content: end;
+  flex-wrap: wrap;
+}
+
+.boton--chico {
+  font-size: var(--tam-xs);
+  padding: var(--esp-1) var(--esp-3);
+}
+
+/* ------------------------------------------------------ etiquetas de estado */
+
+/* Siempre llevan la palabra escrita ademas del color: cerca del 8 % de los
+   varones no distingue rojo de verde, y con el color solo la columna les
+   quedaria vacia. */
+.etiqueta {
+  display: inline-block;
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: var(--esp-1) var(--esp-3);
+  border-radius: var(--radio-pill);
+  white-space: nowrap;
+}
+
+.etiqueta--ok     { color: var(--color-ok);    background: var(--color-ok-fondo); }
+.etiqueta--aviso  { color: var(--color-aviso); background: var(--color-aviso-fondo); }
+.etiqueta--error  { color: var(--color-error); background: var(--color-error-fondo); }
+
+.etiqueta--neutro {
+  color: var(--color-texto-suave);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+}

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { obtenerSesion, cerrarSesion } from './api/sesion.js';
 import Login from './paginas/Login.jsx';
 import Usuarios from './paginas/Usuarios.jsx';
+import Proveedores from './paginas/Proveedores.jsx';
+import Insumos from './paginas/Insumos.jsx';
 import './App.css';
 
 /**
@@ -40,9 +42,24 @@ export default function App() {
     return <Login alEntrar={setUsuario} />;
   }
 
-  // CU-02 es solo del Encargado. El backend lo verifica igual en cada pedido:
-  // esconder el enlace evita el clic inutil, no es la medida de seguridad.
+  // Insumos, proveedores y usuarios son secciones del Encargado. El backend lo
+  // verifica igual en cada pedido: esconder el enlace evita el clic inutil, no
+  // es la medida de seguridad.
   const esEncargado = usuario.rol === 'Encargado';
+
+  const secciones = [
+    { clave: 'inicio', texto: 'Inicio' },
+    ...(esEncargado
+      ? [
+          { clave: 'insumos', texto: 'Insumos' },
+          { clave: 'proveedores', texto: 'Proveedores' },
+          { clave: 'usuarios', texto: 'Usuarios' },
+        ]
+      : []),
+  ];
+
+  // Si el rol no habilita la pantalla elegida, se cae a Inicio.
+  const seccionValida = secciones.some((s) => s.clave === pantalla) ? pantalla : 'inicio';
 
   return (
     <div className="aplicacion">
@@ -54,23 +71,16 @@ export default function App() {
           </div>
 
           <nav className="navegacion" aria-label="Secciones">
-            <button
-              className={`navegacion__enlace ${pantalla === 'inicio' ? 'navegacion__enlace--activo' : ''}`}
-              onClick={() => setPantalla('inicio')}
-              aria-current={pantalla === 'inicio' ? 'page' : undefined}
-            >
-              Inicio
-            </button>
-
-            {esEncargado && (
+            {secciones.map(({ clave, texto }) => (
               <button
-                className={`navegacion__enlace ${pantalla === 'usuarios' ? 'navegacion__enlace--activo' : ''}`}
-                onClick={() => setPantalla('usuarios')}
-                aria-current={pantalla === 'usuarios' ? 'page' : undefined}
+                key={clave}
+                className={`navegacion__enlace ${pantalla === clave ? 'navegacion__enlace--activo' : ''}`}
+                onClick={() => setPantalla(clave)}
+                aria-current={pantalla === clave ? 'page' : undefined}
               >
-                Usuarios
+                {texto}
               </button>
-            )}
+            ))}
           </nav>
 
           <div className="barra__sesion">
@@ -85,8 +95,12 @@ export default function App() {
       </header>
 
       <main className="contenido">
-        {pantalla === 'usuarios' && esEncargado ? (
+        {seccionValida === 'usuarios' ? (
           <Usuarios usuarioActual={usuario} />
+        ) : seccionValida === 'proveedores' ? (
+          <Proveedores />
+        ) : seccionValida === 'insumos' ? (
+          <Insumos />
         ) : (
           <section className="panel">
             <h2 className="panel__titulo">Sesion iniciada</h2>
@@ -96,7 +110,7 @@ export default function App() {
               <dt>Rol</dt><dd>{usuario.rol}</dd>
             </dl>
             <p className="proximo">
-              Las pantallas de insumos, produccion y ventas se incorporan en los
+              Las pantallas de produccion, ventas y alertas se incorporan en los
               sprints siguientes.
             </p>
           </section>

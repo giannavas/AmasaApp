@@ -2,6 +2,8 @@ import express from 'express';
 import { consultar } from './config/db.js';
 import { rutasSesion } from './rutas/sesion.js';
 import { rutasUsuarios } from './rutas/usuarios.js';
+import { rutasProveedores } from './rutas/proveedores.js';
+import { rutasMateriasPrimas } from './rutas/materias-primas.js';
 
 /**
  * La aplicacion Express, separada del arranque del servidor.
@@ -18,6 +20,12 @@ app.use('/api/sesion', rutasSesion);
 
 // CU-02: gestion de usuarios, solo para el Encargado
 app.use('/api/usuarios', rutasUsuarios);
+
+// CU-11: gestion de proveedores
+app.use('/api/proveedores', rutasProveedores);
+
+// CU-03, CU-04 y CU-05: insumos y consulta de stock
+app.use('/api/materias-primas', rutasMateriasPrimas);
 
 /**
  * Verificacion de estado. Confirma que la API responde y que la base de datos

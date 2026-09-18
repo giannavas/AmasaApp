@@ -5,7 +5,6 @@ import {
   editarUsuario,
   cambiarEstado,
 } from '../api/usuarios.js';
-import './Usuarios.css';
 
 const ROLES = ['Venta', 'Panificador', 'Encargado'];
 const LARGO_MINIMO_CLAVE = 8;
@@ -136,11 +135,11 @@ export default function Usuarios({ usuarioActual }) {
   }
 
   return (
-    <section className="usuarios">
-      <header className="usuarios__encabezado">
+    <section className="seccion">
+      <header className="seccion__encabezado">
         <div>
           <h2>Usuarios</h2>
-          <p className="usuarios__ayuda">
+          <p className="seccion__ayuda">
             Altas, bajas y cambios de rol. Desactivar a alguien le corta el acceso
             en el momento.
           </p>
@@ -151,13 +150,13 @@ export default function Usuarios({ usuarioActual }) {
       </header>
 
       {error && (
-        <p className="usuarios__error" role="alert">
+        <p className="mensaje-error" role="alert">
           {error}
         </p>
       )}
 
       {editando !== null && (
-        <form className="usuarios__formulario" onSubmit={guardar} noValidate>
+        <form className="formulario-panel" onSubmit={guardar} noValidate>
           <h3>{esAlta ? 'Nuevo usuario' : 'Editar usuario'}</h3>
 
           <div className="campo">
@@ -228,12 +227,12 @@ export default function Usuarios({ usuarioActual }) {
           )}
 
           {errorFormulario && (
-            <p className="usuarios__error" role="alert" aria-live="polite">
+            <p className="mensaje-error" role="alert" aria-live="polite">
               {errorFormulario}
             </p>
           )}
 
-          <div className="usuarios__acciones-formulario">
+          <div className="formulario-panel__acciones">
             <button type="submit" className="boton boton--primario" disabled={guardando}>
               {guardando ? 'Guardando...' : 'Guardar'}
             </button>
@@ -250,7 +249,7 @@ export default function Usuarios({ usuarioActual }) {
       )}
 
       {cargando ? (
-        <p className="usuarios__ayuda">Cargando usuarios...</p>
+        <p className="seccion__ayuda">Cargando usuarios...</p>
       ) : (
         <div className="tabla-envoltorio">
           <table className="tabla">
@@ -278,7 +277,7 @@ export default function Usuarios({ usuarioActual }) {
                           quien no distingue rojo de verde no puede leerla. */}
                       <span
                         className={`etiqueta ${
-                          usuario.activo ? 'etiqueta--ok' : 'etiqueta--inactivo'
+                          usuario.activo ? 'etiqueta--ok' : 'etiqueta--neutro'
                         }`}
                       >
                         {usuario.activo ? 'Activo' : 'Inactivo'}
