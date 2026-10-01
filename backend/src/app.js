@@ -6,6 +6,7 @@ import { rutasProveedores } from './rutas/proveedores.js';
 import { rutasMateriasPrimas } from './rutas/materias-primas.js';
 import { rutasProductos } from './rutas/productos.js';
 import { rutasRecetas } from './rutas/recetas.js';
+import { rutasProduccion } from './rutas/produccion.js';
 
 /**
  * La aplicacion Express, separada del arranque del servidor.
@@ -32,6 +33,9 @@ app.use('/api/materias-primas', rutasMateriasPrimas);
 // Productos y recetas: lo que CU-06 necesita para poder producir
 app.use('/api/productos', rutasProductos);
 app.use('/api/recetas', rutasRecetas);
+
+// CU-06: registrar lotes de produccion
+app.use('/api/produccion', rutasProduccion);
 
 /**
  * Verificacion de estado. Confirma que la API responde y que la base de datos
