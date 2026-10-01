@@ -4,6 +4,8 @@ import { rutasSesion } from './rutas/sesion.js';
 import { rutasUsuarios } from './rutas/usuarios.js';
 import { rutasProveedores } from './rutas/proveedores.js';
 import { rutasMateriasPrimas } from './rutas/materias-primas.js';
+import { rutasProductos } from './rutas/productos.js';
+import { rutasRecetas } from './rutas/recetas.js';
 
 /**
  * La aplicacion Express, separada del arranque del servidor.
@@ -26,6 +28,10 @@ app.use('/api/proveedores', rutasProveedores);
 
 // CU-03, CU-04 y CU-05: insumos y consulta de stock
 app.use('/api/materias-primas', rutasMateriasPrimas);
+
+// Productos y recetas: lo que CU-06 necesita para poder producir
+app.use('/api/productos', rutasProductos);
+app.use('/api/recetas', rutasRecetas);
 
 /**
  * Verificacion de estado. Confirma que la API responde y que la base de datos
