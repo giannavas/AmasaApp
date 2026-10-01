@@ -4,6 +4,9 @@ import Login from './paginas/Login.jsx';
 import Usuarios from './paginas/Usuarios.jsx';
 import Proveedores from './paginas/Proveedores.jsx';
 import Insumos from './paginas/Insumos.jsx';
+import Productos from './paginas/Productos.jsx';
+import Recetas from './paginas/Recetas.jsx';
+import Produccion from './paginas/Produccion.jsx';
 import './App.css';
 
 /**
@@ -47,11 +50,17 @@ export default function App() {
   // es la medida de seguridad.
   const esEncargado = usuario.rol === 'Encargado';
 
+  // CU-06 tambien lo opera el Panificador; el resto es administracion.
+  const puedeProducir = esEncargado || usuario.rol === 'Panificador';
+
   const secciones = [
     { clave: 'inicio', texto: 'Inicio' },
+    ...(puedeProducir ? [{ clave: 'produccion', texto: 'Produccion' }] : []),
     ...(esEncargado
       ? [
           { clave: 'insumos', texto: 'Insumos' },
+          { clave: 'productos', texto: 'Productos' },
+          { clave: 'recetas', texto: 'Recetas' },
           { clave: 'proveedores', texto: 'Proveedores' },
           { clave: 'usuarios', texto: 'Usuarios' },
         ]
@@ -101,6 +110,12 @@ export default function App() {
           <Proveedores />
         ) : seccionValida === 'insumos' ? (
           <Insumos />
+        ) : seccionValida === 'productos' ? (
+          <Productos />
+        ) : seccionValida === 'recetas' ? (
+          <Recetas />
+        ) : seccionValida === 'produccion' ? (
+          <Produccion />
         ) : (
           <section className="panel">
             <h2 className="panel__titulo">Sesion iniciada</h2>
@@ -110,8 +125,8 @@ export default function App() {
               <dt>Rol</dt><dd>{usuario.rol}</dd>
             </dl>
             <p className="proximo">
-              Las pantallas de produccion, ventas y alertas se incorporan en los
-              sprints siguientes.
+              Las pantallas de ventas y alertas se incorporan en los sprints
+              siguientes.
             </p>
           </section>
         )}
