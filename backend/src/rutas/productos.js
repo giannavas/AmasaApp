@@ -4,7 +4,16 @@ import { autenticar, exigirRol } from '../middleware/autenticar.js';
 
 export const rutasProductos = Router();
 
-rutasProductos.use(autenticar, exigirRol('Encargado'));
+/* Toda la seccion exige sesion, pero no el mismo rol para todo.
+
+   Consultar el catalogo lo necesitan los tres roles: CU-07 arma la venta
+   eligiendo el producto y su precio, asi que el mostrador tiene que poder
+   leer la lista. Administrar el catalogo (dar de alta y editar) sigue siendo
+   del Encargado, y por eso el rol se exige en cada ruta que escribe y no a
+   nivel de la seccion entera. */
+rutasProductos.use(autenticar);
+
+const soloEncargado = exigirRol('Encargado');
 
 /* Mismo criterio de estado que en los insumos: en el minimo ya se considera
    critico, y el maximo se considera excedido solo al superarlo. */
@@ -91,7 +100,7 @@ rutasProductos.get('/', async (_req, res, siguiente) => {
  * lote (CU-06) y baja al vender (CU-07): cargarlo a mano dejaria un stock sin
  * ningun lote que lo respalde.
  */
-rutasProductos.post('/', async (req, res, siguiente) => {
+rutasProductos.post('/', soloEncargado, async (req, res, siguiente) => {
   try {
     const { nombre, descripcion, precioVenta, stockMinimo, stockMaximo } = req.body ?? {};
 
@@ -117,7 +126,7 @@ rutasProductos.post('/', async (req, res, siguiente) => {
 /**
  * Editar un producto. No toca el stock, por el mismo motivo que el alta.
  */
-rutasProductos.put('/:id', async (req, res, siguiente) => {
+rutasProductos.put('/:id', soloEncargado, async (req, res, siguiente) => {
   try {
     const id = leerId(req);
     if (id === null) return res.status(404).json({ error: 'El producto no existe' });

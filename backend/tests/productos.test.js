@@ -88,6 +88,19 @@ test('un usuario de Venta no puede crear productos', async () => {
   assert.equal(r.status, 403);
 });
 
+test('un usuario de Venta si puede ver el listado de productos', async () => {
+  /* CU-07 necesita la lista para armar la venta: el mostrador tiene que poder
+     elegir el producto y ver su precio. Lo que sigue siendo del Encargado es
+     administrar el catalogo, no consultarlo. */
+  const r = await pedir('', { cookie: cookieVenta });
+  assert.equal(r.status, 200);
+});
+
+test('un usuario de Venta no puede editar un producto', async () => {
+  const r = await pedir('/1', { cookie: cookieVenta, metodo: 'PUT', cuerpo: alta() });
+  assert.equal(r.status, 403);
+});
+
 /* ------------------------------------------------------------------ crear */
 
 test('el Encargado da de alta un producto', async () => {
