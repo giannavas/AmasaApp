@@ -334,3 +334,142 @@ test('rechaza un precio negativo', async () => {
 
   assert.equal(r.status, 400);
 });
+
+/* ------------------------------------------- CU-08: historial de ventas */
+
+/** Registra una venta y devuelve el cuerpo de la respuesta. */
+async function vender(detalles, fecha) {
+  const r = await pedir('', {
+    cookie: cookieVenta,
+    metodo: 'POST',
+    cuerpo: { detalles, fecha },
+  });
+  const { venta } = await r.json();
+  return venta;
+}
+
+/** Pide el historial con los filtros indicados. */
+async function historial(consulta = '') {
+  const r = await pedir(consulta, { cookie: cookieVenta });
+  return { estado: r.status, cuerpo: await r.json() };
+}
+
+test('sin sesion no se puede consultar el historial', async () => {
+  const r = await fetch(`${base}/api/ventas`);
+  assert.equal(r.status, 401);
+});
+
+test('el historial lista las ventas registradas', async () => {
+  await reiniciar();
+  await vender([{ idProducto: idCañoncito, cantidad: 2 }]);
+  await vender([{ idProducto: idPan, cantidad: 1 }]);
+
+  const { estado, cuerpo } = await historial();
+
+  assert.equal(estado, 200);
+  assert.equal(cuerpo.ventas.length, 2);
+});
+
+test('el historial trae las ventas mas nuevas primero', async () => {
+  await reiniciar();
+  const vieja = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
+  const nueva = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-09-01');
+
+  const { cuerpo } = await historial();
+
+  assert.equal(cuerpo.ventas[0].idVenta, nueva.idVenta);
+  assert.equal(cuerpo.ventas[1].idVenta, vieja.idVenta);
+});
+
+test('cada venta del historial trae su detalle', async () => {
+  await reiniciar();
+  await vender([
+    { idProducto: idCañoncito, cantidad: 4 },
+    { idProducto: idPan, cantidad: 1 },
+  ]);
+
+  const { cuerpo } = await historial();
+  const [venta] = cuerpo.ventas;
+
+  assert.equal(venta.detalles.length, 2);
+  assert.equal(venta.total, 4 * PRECIO_CAÑONCITO + PRECIO_PAN);
+});
+
+test('el historial se puede filtrar por producto', async () => {
+  await reiniciar();
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }]);
+  await vender([{ idProducto: idPan, cantidad: 1 }]);
+
+  const { cuerpo } = await historial(`?idProducto=${idPan}`);
+
+  assert.equal(cuerpo.ventas.length, 1);
+  assert.equal(cuerpo.ventas[0].detalles[0].idProducto, idPan);
+});
+
+test('filtrar por producto trae la venta completa, no solo esa linea', async () => {
+  /* Si una venta llevo dos productos y se filtra por uno, la venta aparece
+     con su detalle entero: el total que se muestra es el que se cobro. */
+  await reiniciar();
+  await vender([
+    { idProducto: idCañoncito, cantidad: 2 },
+    { idProducto: idPan, cantidad: 1 },
+  ]);
+
+  const { cuerpo } = await historial(`?idProducto=${idPan}`);
+
+  assert.equal(cuerpo.ventas.length, 1);
+  assert.equal(cuerpo.ventas[0].detalles.length, 2);
+});
+
+test('el historial se puede filtrar desde una fecha', async () => {
+  await reiniciar();
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
+  const nueva = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-09-01');
+
+  const { cuerpo } = await historial('?desde=2026-06-01');
+
+  assert.equal(cuerpo.ventas.length, 1);
+  assert.equal(cuerpo.ventas[0].idVenta, nueva.idVenta);
+});
+
+test('el historial se puede filtrar hasta una fecha', async () => {
+  await reiniciar();
+  const vieja = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-09-01');
+
+  const { cuerpo } = await historial('?hasta=2026-06-01');
+
+  assert.equal(cuerpo.ventas.length, 1);
+  assert.equal(cuerpo.ventas[0].idVenta, vieja.idVenta);
+});
+
+test('el filtro hasta incluye las ventas de ese mismo dia', async () => {
+  // Una venta del 1 de marzo a las 14:30 tiene que entrar en "hasta el 1 de
+  // marzo". Comparar el timestamp crudo contra la medianoche la dejaria afuera.
+  await reiniciar();
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01 14:30');
+
+  const { cuerpo } = await historial('?hasta=2026-03-01');
+
+  assert.equal(cuerpo.ventas.length, 1);
+});
+
+test('el historial sin resultados devuelve una lista vacia', async () => {
+  await reiniciar();
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
+
+  const { estado, cuerpo } = await historial('?desde=2026-08-01');
+
+  assert.equal(estado, 200);
+  assert.deepEqual(cuerpo.ventas, []);
+});
+
+test('rechaza una fecha que no se entiende', async () => {
+  const { estado } = await historial('?desde=el-martes');
+  assert.equal(estado, 400);
+});
+
+test('rechaza un idProducto que no es un numero', async () => {
+  const { estado } = await historial('?idProducto=cañoncito');
+  assert.equal(estado, 400);
+});

@@ -220,3 +220,103 @@ rutasVentas.post('/', async (req, res, siguiente) => {
     siguiente(error);
   }
 });
+
+/**
+ * Valida una fecha del filtro.
+ *
+ * Solo se acepta el formato ISO (2026-03-01), que es el que manda el input
+ * date del navegador. No se usa `new Date(valor)` a secas porque acepta
+ * cualquier cosa: "el-martes" daria una fecha invalida y un listado vacio
+ * en lugar de un error, y el usuario no sabria por que no ve nada.
+ */
+function validarFecha(valor) {
+  if (valor === undefined || valor === '') return { fecha: null };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return { error: true };
+  const fecha = new Date(`${valor}T00:00:00`);
+  if (Number.isNaN(fecha.getTime())) return { error: true };
+  return { fecha: valor };
+}
+
+/**
+ * CU-08 - Consultar el historial de ventas.
+ *
+ * Acepta ?desde= y ?hasta= (fechas ISO) y ?idProducto= para filtrar.
+ *
+ * El filtro por producto usa EXISTS y no un JOIN: con JOIN, una venta de dos
+ * productos apareceria duplicada en el listado. Con EXISTS la venta aparece
+ * una sola vez y con su detalle completo, que es lo que corresponde mostrar
+ * porque el total de la venta es el que se cobro.
+ */
+rutasVentas.get('/', async (req, res, siguiente) => {
+  try {
+    const desde = validarFecha(req.query.desde);
+    const hasta = validarFecha(req.query.hasta);
+    if (desde.error || hasta.error) {
+      return res.status(400).json({ error: 'Las fechas van en formato aaaa-mm-dd' });
+    }
+
+    let idProducto = null;
+    if (req.query.idProducto !== undefined && req.query.idProducto !== '') {
+      idProducto = Number(req.query.idProducto);
+      if (!Number.isInteger(idProducto)) {
+        return res.status(400).json({ error: 'El producto del filtro no es valido' });
+      }
+    }
+
+    const condiciones = [];
+    const valores = [];
+
+    if (desde.fecha) {
+      valores.push(desde.fecha);
+      condiciones.push(`v.fecha >= $${valores.length}::date`);
+    }
+    if (hasta.fecha) {
+      /* Se suma un dia y se compara con "menor que", asi una venta del mismo
+         dia a las 14:30 entra en "hasta el 1 de marzo". Comparar contra la
+         medianoche de ese dia la dejaria afuera. */
+      valores.push(hasta.fecha);
+      condiciones.push(`v.fecha < $${valores.length}::date + 1`);
+    }
+    if (idProducto !== null) {
+      valores.push(idProducto);
+      condiciones.push(
+        `EXISTS (SELECT 1 FROM detalle_venta d
+                  WHERE d.id_venta = v.id_venta AND d.id_producto = $${valores.length})`
+      );
+    }
+
+    const donde = condiciones.length > 0 ? ` WHERE ${condiciones.join(' AND ')}` : '';
+
+    const { rows } = await consultar(
+      `${SELECT_VENTA}${donde} ORDER BY v.fecha DESC, v.id_venta DESC`,
+      valores
+    );
+
+    if (rows.length === 0) {
+      return res.json({ ventas: [] });
+    }
+
+    /* Todos los detalles en una sola consulta. Pedirlos venta por venta
+       serian N+1 consultas: con 200 ventas en el listado, 201 viajes a la
+       base en lugar de dos. */
+    const { rows: detalles } = await consultar(
+      `${SELECT_DETALLE}
+        WHERE d.id_venta = ANY($1::int[])
+        ORDER BY d.id_venta, d.id_detalle_venta`,
+      [rows.map((fila) => fila.id_venta)]
+    );
+
+    const porVenta = new Map();
+    for (const detalle of detalles) {
+      const lista = porVenta.get(detalle.id_venta) ?? [];
+      lista.push(aSalidaDetalle(detalle));
+      porVenta.set(detalle.id_venta, lista);
+    }
+
+    res.json({
+      ventas: rows.map((fila) => aSalida(fila, porVenta.get(fila.id_venta) ?? [])),
+    });
+  } catch (error) {
+    siguiente(error);
+  }
+});
