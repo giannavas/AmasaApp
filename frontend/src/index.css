@@ -329,3 +329,78 @@ button { font: inherit; cursor: pointer; }
   justify-content: space-between;
   gap: var(--esp-4);
 }
+
+/* ------------------------------------------------- ventas (CU-07 y CU-08) */
+
+/* Renglon de una venta: producto, cantidad y precio, con el boton de quitar
+   al final. Es la variante de cuatro columnas de .lista-detalles__fila. */
+.lista-detalles__fila--venta {
+  grid-template-columns: 2fr 1fr 1fr auto;
+}
+
+@media (max-width: 48rem) {
+  .lista-detalles__fila--venta { grid-template-columns: 1fr; align-items: stretch; }
+}
+
+/* Aviso dentro de un campo: el color va con el texto, nunca solo el color,
+   para que se entienda sin distinguir tonos. */
+.campo__pista--aviso {
+  color: var(--color-aviso);
+  font-weight: 600;
+}
+
+/* Total de la venta que se esta cargando. */
+.total-venta {
+  margin: 0;
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--color-borde);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--esp-4);
+  color: var(--color-texto-suave);
+  font-size: var(--tam-sm);
+}
+
+.total-venta strong {
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xl);
+  color: var(--color-texto);
+}
+
+/* Filtros del historial. Se acomodan en una fila y bajan si no entran. */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-4);
+  padding: var(--esp-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+}
+
+.filtros .campo { margin: 0; }
+
+.filtros__acciones {
+  display: flex;
+  gap: var(--esp-2);
+}
+
+/* Las lineas de una venta dentro de su celda del listado. */
+.renglones {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--esp-1);
+  font-size: var(--tam-sm);
+}
+
+.renglones__precio {
+  margin-left: var(--esp-2);
+  color: var(--color-texto-suave);
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+}

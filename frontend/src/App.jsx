@@ -7,6 +7,7 @@ import Insumos from './paginas/Insumos.jsx';
 import Productos from './paginas/Productos.jsx';
 import Recetas from './paginas/Recetas.jsx';
 import Produccion from './paginas/Produccion.jsx';
+import Ventas from './paginas/Ventas.jsx';
 import './App.css';
 
 /**
@@ -53,8 +54,11 @@ export default function App() {
   // CU-06 tambien lo opera el Panificador; el resto es administracion.
   const puedeProducir = esEncargado || usuario.rol === 'Panificador';
 
+  /* CU-07 y CU-08 son de los tres roles: el mostrador vende, pero el
+     Panificador y el Encargado tambien registran ventas cuando atienden. */
   const secciones = [
     { clave: 'inicio', texto: 'Inicio' },
+    { clave: 'ventas', texto: 'Ventas' },
     ...(puedeProducir ? [{ clave: 'produccion', texto: 'Produccion' }] : []),
     ...(esEncargado
       ? [
@@ -116,6 +120,8 @@ export default function App() {
           <Recetas />
         ) : seccionValida === 'produccion' ? (
           <Produccion />
+        ) : seccionValida === 'ventas' ? (
+          <Ventas />
         ) : (
           <section className="panel">
             <h2 className="panel__titulo">Sesion iniciada</h2>
@@ -125,8 +131,8 @@ export default function App() {
               <dt>Rol</dt><dd>{usuario.rol}</dd>
             </dl>
             <p className="proximo">
-              Las pantallas de ventas y alertas se incorporan en los sprints
-              siguientes.
+              Las alertas de stock y el panel de control se incorporan en los
+              sprints siguientes.
             </p>
           </section>
         )}
