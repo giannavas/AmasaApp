@@ -9,6 +9,7 @@ import { rutasRecetas } from './rutas/recetas.js';
 import { rutasProduccion } from './rutas/produccion.js';
 import { rutasVentas } from './rutas/ventas.js';
 import { rutasAlertas } from './rutas/alertas.js';
+import { rutasPanel } from './rutas/panel.js';
 
 /**
  * La aplicacion Express, separada del arranque del servidor.
@@ -44,6 +45,9 @@ app.use('/api/ventas', rutasVentas);
 
 // CU-09 y CU-10: alertas de stock
 app.use('/api/alertas', rutasAlertas);
+
+// CU-12: panel de control
+app.use('/api/panel', rutasPanel);
 
 /**
  * Verificacion de estado. Confirma que la API responde y que la base de datos
