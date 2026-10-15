@@ -8,6 +8,7 @@ import { rutasProductos } from './rutas/productos.js';
 import { rutasRecetas } from './rutas/recetas.js';
 import { rutasProduccion } from './rutas/produccion.js';
 import { rutasVentas } from './rutas/ventas.js';
+import { rutasAlertas } from './rutas/alertas.js';
 
 /**
  * La aplicacion Express, separada del arranque del servidor.
@@ -38,8 +39,11 @@ app.use('/api/recetas', rutasRecetas);
 // CU-06: registrar lotes de produccion
 app.use('/api/produccion', rutasProduccion);
 
-// CU-07: registrar ventas
+// CU-07 y CU-08: registrar y consultar ventas
 app.use('/api/ventas', rutasVentas);
+
+// CU-09 y CU-10: alertas de stock
+app.use('/api/alertas', rutasAlertas);
 
 /**
  * Verificacion de estado. Confirma que la API responde y que la base de datos
