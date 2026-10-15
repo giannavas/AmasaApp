@@ -8,6 +8,8 @@ import Productos from './paginas/Productos.jsx';
 import Recetas from './paginas/Recetas.jsx';
 import Produccion from './paginas/Produccion.jsx';
 import Ventas from './paginas/Ventas.jsx';
+import Alertas from './paginas/Alertas.jsx';
+import { obtenerResumenAlertas } from './api/alertas.js';
 import './App.css';
 
 /**
@@ -21,6 +23,7 @@ export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [verificando, setVerificando] = useState(true);
   const [pantalla, setPantalla] = useState('inicio');
+  const [resumenAlertas, setResumenAlertas] = useState(null);
 
   useEffect(() => {
     obtenerSesion()
@@ -28,9 +31,23 @@ export default function App() {
       .finally(() => setVerificando(false));
   }, []);
 
+  const esEncargado = usuario?.rol === 'Encargado';
+
+  /* CU-09: el aviso de alertas de la barra se actualiza al entrar y cada vez
+     que se cambia de pantalla. Es el momento en que el stock pudo haber
+     cambiado (se vendio, se produjo o se compro algo) y no hace falta
+     consultar al servidor cada pocos segundos para enterarse. */
+  useEffect(() => {
+    if (!esEncargado) return;
+    obtenerResumenAlertas()
+      .then(setResumenAlertas)
+      .catch(() => setResumenAlertas(null));
+  }, [esEncargado, pantalla]);
+
   async function salir() {
     await cerrarSesion();
     setUsuario(null);
+    setResumenAlertas(null);
     setPantalla('inicio');
   }
 
@@ -46,10 +63,10 @@ export default function App() {
     return <Login alEntrar={setUsuario} />;
   }
 
-  // Insumos, proveedores y usuarios son secciones del Encargado. El backend lo
-  // verifica igual en cada pedido: esconder el enlace evita el clic inutil, no
-  // es la medida de seguridad.
-  const esEncargado = usuario.rol === 'Encargado';
+  // Alertas, insumos, proveedores y usuarios son secciones del Encargado
+  // (esEncargado se calcula mas arriba porque lo usa el aviso de alertas). El
+  // backend lo verifica igual en cada pedido: esconder el enlace evita el clic
+  // inutil, no es la medida de seguridad.
 
   // CU-06 tambien lo opera el Panificador; el resto es administracion.
   const puedeProducir = esEncargado || usuario.rol === 'Panificador';
@@ -62,6 +79,7 @@ export default function App() {
     ...(puedeProducir ? [{ clave: 'produccion', texto: 'Produccion' }] : []),
     ...(esEncargado
       ? [
+          { clave: 'alertas', texto: 'Alertas' },
           { clave: 'insumos', texto: 'Insumos' },
           { clave: 'productos', texto: 'Productos' },
           { clave: 'recetas', texto: 'Recetas' },
@@ -92,6 +110,14 @@ export default function App() {
                 aria-current={pantalla === clave ? 'page' : undefined}
               >
                 {texto}
+                {clave === 'alertas' && resumenAlertas?.total > 0 && (
+                  <span
+                    className={`navegacion__contador ${resumenAlertas.criticas > 0 ? 'navegacion__contador--error' : ''}`}
+                  >
+                    {resumenAlertas.total}
+                    <span className="visualmente-oculto"> alertas activas</span>
+                  </span>
+                )}
               </button>
             ))}
           </nav>
@@ -108,7 +134,9 @@ export default function App() {
       </header>
 
       <main className="contenido">
-        {seccionValida === 'usuarios' ? (
+        {seccionValida === 'alertas' ? (
+          <Alertas alCambiarResumen={setResumenAlertas} />
+        ) : seccionValida === 'usuarios' ? (
           <Usuarios usuarioActual={usuario} />
         ) : seccionValida === 'proveedores' ? (
           <Proveedores />
@@ -131,8 +159,7 @@ export default function App() {
               <dt>Rol</dt><dd>{usuario.rol}</dd>
             </dl>
             <p className="proximo">
-              Las alertas de stock y el panel de control se incorporan en los
-              sprints siguientes.
+              El panel de control se incorpora en el sprint siguiente.
             </p>
           </section>
         )}

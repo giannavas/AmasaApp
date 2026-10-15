@@ -28,7 +28,7 @@
 .marca h1 { font-size: var(--tam-xl); margin-bottom: 0; }
 .marca p { color: var(--color-texto-suave); font-size: var(--tam-xs); }
 
-.navegacion { display: flex; gap: var(--esp-1); }
+.navegacion { display: flex; flex-wrap: wrap; gap: var(--esp-1); }
 
 /* Son botones y no enlaces porque todavia no hay rutas: cambian el estado de
    la aplicacion, no la direccion. Cuando haya rutas pasan a ser enlaces. */
@@ -112,4 +112,25 @@
   margin-top: var(--esp-5);
   color: var(--color-texto-suave);
   font-size: var(--tam-sm);
+}
+
+/* Contador de alertas junto al enlace de la seccion (CU-09). Rojo si hay
+   alguna critica; si solo hay sobrestock, en el tono de aviso. */
+.navegacion__contador {
+  display: inline-block;
+  margin-left: var(--esp-2);
+  min-width: 1.5em;
+  padding: 0 var(--esp-2);
+  border-radius: var(--radio-pill);
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--color-aviso);
+  background: var(--color-aviso-fondo);
+}
+
+.navegacion__contador--error {
+  color: var(--color-error);
+  background: var(--color-error-fondo);
 }
