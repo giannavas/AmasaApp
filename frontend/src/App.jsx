@@ -9,6 +9,7 @@ import Recetas from './paginas/Recetas.jsx';
 import Produccion from './paginas/Produccion.jsx';
 import Ventas from './paginas/Ventas.jsx';
 import Alertas from './paginas/Alertas.jsx';
+import Panel from './paginas/Panel.jsx';
 import { obtenerResumenAlertas } from './api/alertas.js';
 import './App.css';
 
@@ -150,7 +151,12 @@ export default function App() {
           <Produccion />
         ) : seccionValida === 'ventas' ? (
           <Ventas />
+        ) : esEncargado ? (
+          /* CU-12: el Encargado entra directo a su panel de control. */
+          <Panel usuario={usuario} alIrA={setPantalla} />
         ) : (
+          /* Venta y Panificador no tienen panel: el inicio les muestra su
+             sesion y los lleva en un clic a las secciones que usan. */
           <section className="panel">
             <h2 className="panel__titulo">Sesion iniciada</h2>
             <dl className="datos-usuario">
@@ -158,9 +164,19 @@ export default function App() {
               <dt>Correo</dt><dd>{usuario.email}</dd>
               <dt>Rol</dt><dd>{usuario.rol}</dd>
             </dl>
-            <p className="proximo">
-              El panel de control se incorpora en el sprint siguiente.
-            </p>
+            <div className="accesos">
+              {secciones
+                .filter((s) => s.clave !== 'inicio')
+                .map(({ clave, texto }) => (
+                  <button
+                    key={clave}
+                    className="boton boton--primario"
+                    onClick={() => setPantalla(clave)}
+                  >
+                    Ir a {texto}
+                  </button>
+                ))}
+            </div>
           </section>
         )}
       </main>

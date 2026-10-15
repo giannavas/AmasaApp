@@ -108,10 +108,11 @@
 
 .datos-usuario dd { margin: 0; font-weight: 500; }
 
-.proximo {
+.accesos {
   margin-top: var(--esp-5);
-  color: var(--color-texto-suave);
-  font-size: var(--tam-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
 }
 
 /* Contador de alertas junto al enlace de la seccion (CU-09). Rojo si hay
