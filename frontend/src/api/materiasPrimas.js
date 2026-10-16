@@ -52,3 +52,20 @@ export async function editarMateriaPrima(idMateriaPrima, datos) {
   });
   return (await procesar(respuesta)).materiaPrima;
 }
+
+/**
+ * Registra un ingreso de mercaderia sobre un insumo que ya existe.
+ *
+ * Es la unica forma de que el stock suba despues del alta. El servidor suma
+ * la cantidad y recalcula el costo promedio con la compra nueva, asi que
+ * devuelve el insumo ya actualizado.
+ */
+export async function registrarIngreso(idMateriaPrima, datos) {
+  const respuesta = await fetch(`/api/materias-primas/${idMateriaPrima}/ingresos`, {
+    method: 'POST',
+    headers: cabeceras,
+    credentials: 'same-origin',
+    body: JSON.stringify(datos),
+  });
+  return (await procesar(respuesta)).materiaPrima;
+}

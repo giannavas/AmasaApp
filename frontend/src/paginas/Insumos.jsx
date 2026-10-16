@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   listarMateriasPrimas,
   crearMateriaPrima,
   editarMateriaPrima,
+  registrarIngreso,
 } from '../api/materiasPrimas.js';
 import { listarProveedores } from '../api/proveedores.js';
 
@@ -19,6 +20,13 @@ const FORMULARIO_VACIO = {
   unidadMedida: 'kg',
   stockMinimo: '',
   stockMaximo: '',
+  cantidad: '',
+  precioUnitario: '',
+  fechaVencimiento: '',
+  idProveedor: '',
+};
+
+const INGRESO_VACIO = {
   cantidad: '',
   precioUnitario: '',
   fechaVencimiento: '',
@@ -60,7 +68,36 @@ export default function Insumos() {
   const [errorFormulario, setErrorFormulario] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
+  /* Reposicion: que insumo se esta reponiendo y con que datos. Va aparte del
+     formulario de alta y edicion porque son operaciones distintas: una toca
+     la ficha, la otra mueve el stock. */
+  const [reponiendo, setReponiendo] = useState(null);
+  const [ingreso, setIngreso] = useState(INGRESO_VACIO);
+  const [errorIngreso, setErrorIngreso] = useState(null);
+
   const esAlta = editando === 'nuevo';
+
+  /* Como queda el insumo si se confirma el ingreso. Repite la cuenta que
+     hace el servidor, pero solo para mostrarla: el calculo que vale es el
+     del backend, que es el unico que ve el stock al momento de guardar.
+     Mostrarlo antes evita la sorpresa de ver el costo promedio cambiado
+     despues de confirmar sin entender por que. */
+  const resultadoPrevisto = useMemo(() => {
+    if (!reponiendo) return null;
+
+    const cantidad = Number(ingreso.cantidad);
+    const precio = Number(ingreso.precioUnitario);
+    if (!Number.isFinite(cantidad) || cantidad <= 0) return null;
+    if (!Number.isFinite(precio) || precio < 0) return null;
+
+    const stock = reponiendo.stockActual + cantidad;
+    const costo = (reponiendo.stockActual * reponiendo.costoPromedio + cantidad * precio) / stock;
+
+    return {
+      stock: Math.round(stock * 100) / 100,
+      costo: Math.round(costo * 100) / 100,
+    };
+  }, [reponiendo, ingreso.cantidad, ingreso.precioUnitario]);
 
   useEffect(() => {
     cargar();
@@ -104,6 +141,57 @@ export default function Insumos() {
   function cerrarFormulario() {
     setEditando(null);
     setErrorFormulario(null);
+  }
+
+  function abrirIngreso(materiaPrima) {
+    cerrarFormulario();
+    setIngreso({
+      ...INGRESO_VACIO,
+      // Se propone el proveedor habitual del insumo, que es a quien se le
+      // suele comprar, pero se puede cambiar si esta compra fue a otro.
+      idProveedor: String(materiaPrima.idProveedorHabitual ?? proveedores[0]?.idProveedor ?? ''),
+    });
+    setErrorIngreso(null);
+    setReponiendo(materiaPrima);
+  }
+
+  function cerrarIngreso() {
+    setReponiendo(null);
+    setErrorIngreso(null);
+  }
+
+  async function guardarIngreso(evento) {
+    evento.preventDefault();
+    setErrorIngreso(null);
+
+    const cantidad = Number(ingreso.cantidad);
+    const precio = Number(ingreso.precioUnitario);
+
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      return setErrorIngreso('La cantidad tiene que ser mayor que cero');
+    }
+    if (!Number.isFinite(precio) || precio < 0) {
+      return setErrorIngreso('El precio unitario no puede ser negativo');
+    }
+    if (!ingreso.idProveedor) {
+      return setErrorIngreso('Elegi a que proveedor se le compro');
+    }
+
+    setGuardando(true);
+    try {
+      await registrarIngreso(reponiendo.idMateriaPrima, {
+        cantidad,
+        precioUnitario: precio,
+        fechaVencimiento: ingreso.fechaVencimiento || null,
+        idProveedor: Number(ingreso.idProveedor),
+      });
+      cerrarIngreso();
+      await cargar();
+    } catch (fallo) {
+      setErrorIngreso(fallo.message);
+    } finally {
+      setGuardando(false);
+    }
   }
 
   function cambiar(campo, valor) {
@@ -342,6 +430,101 @@ export default function Insumos() {
         </form>
       )}
 
+      {reponiendo && (
+        <form className="formulario-panel" onSubmit={guardarIngreso} noValidate>
+          <h3>Registrar ingreso de {reponiendo.nombre}</h3>
+          <p className="seccion__ayuda">
+            Hoy hay {reponiendo.stockActual} {reponiendo.unidadMedida} a un costo
+            promedio de $ {reponiendo.costoPromedio}.
+          </p>
+
+          <div className="formulario-panel__campos">
+            <div className="campo">
+              <label htmlFor="ingresoCantidad">Cantidad que entra</label>
+              <input
+                id="ingresoCantidad"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={ingreso.cantidad}
+                onChange={(e) => setIngreso({ ...ingreso, cantidad: e.target.value })}
+                autoFocus
+                required
+              />
+              <p className="campo__pista">En {reponiendo.unidadMedida}.</p>
+            </div>
+
+            <div className="campo">
+              <label htmlFor="ingresoPrecio">Precio por {reponiendo.unidadMedida}</label>
+              <input
+                id="ingresoPrecio"
+                type="number"
+                min="0"
+                step="0.01"
+                value={ingreso.precioUnitario}
+                onChange={(e) => setIngreso({ ...ingreso, precioUnitario: e.target.value })}
+                required
+              />
+              <p className="campo__pista">Lo que se pago en esta compra.</p>
+            </div>
+
+            <div className="campo">
+              <label htmlFor="ingresoVencimiento">Vencimiento</label>
+              <input
+                id="ingresoVencimiento"
+                type="date"
+                value={ingreso.fechaVencimiento}
+                onChange={(e) => setIngreso({ ...ingreso, fechaVencimiento: e.target.value })}
+              />
+              <p className="campo__pista">Opcional.</p>
+            </div>
+
+            <div className="campo">
+              <label htmlFor="ingresoProveedor">Proveedor</label>
+              <select
+                id="ingresoProveedor"
+                value={ingreso.idProveedor}
+                onChange={(e) => setIngreso({ ...ingreso, idProveedor: e.target.value })}
+                required
+              >
+                <option value="">Elegir...</option>
+                {proveedores.map((p) => (
+                  <option key={p.idProveedor} value={p.idProveedor}>
+                    {p.razonSocial}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {resultadoPrevisto && (
+            <p className="total-venta">
+              Va a quedar en {resultadoPrevisto.stock} {reponiendo.unidadMedida}
+              {' '}a un costo promedio de{' '}
+              <strong>$ {resultadoPrevisto.costo}</strong>
+            </p>
+          )}
+
+          {errorIngreso && (
+            <p className="mensaje-error" role="alert" aria-live="polite">{errorIngreso}</p>
+          )}
+
+          <div className="formulario-panel__acciones">
+            <button type="submit" className="boton boton--primario" disabled={guardando}>
+              {guardando ? 'Registrando...' : 'Registrar ingreso'}
+            </button>
+            <button
+              type="button"
+              className="boton boton--secundario"
+              onClick={cerrarIngreso}
+              disabled={guardando}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+
       {/* Filtros de CU-05 */}
       <div className="formulario-panel__campos">
         <div className="campo">
@@ -415,6 +598,12 @@ export default function Insumos() {
                       </span>
                     </td>
                     <td className="tabla__acciones">
+                      <button
+                        className="boton boton--secundario boton--chico"
+                        onClick={() => abrirIngreso(m)}
+                      >
+                        Registrar ingreso
+                      </button>
                       <button
                         className="boton boton--secundario boton--chico"
                         onClick={() => abrirEdicion(m)}
