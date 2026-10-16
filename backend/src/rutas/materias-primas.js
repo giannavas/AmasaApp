@@ -238,3 +238,108 @@ rutasMateriasPrimas.put('/:id', async (req, res, siguiente) => {
     siguiente(error);
   }
 });
+
+/**
+ * Registrar un ingreso de mercaderia sobre un insumo ya existente.
+ *
+ * Es la unica forma de que el stock de un insumo suba despues del alta. Sin
+ * esta ruta el stock solo podia bajar al producir, y un insumo que llegaba a
+ * cero dejaba trabada para siempre toda receta que lo usara.
+ *
+ * Hace dos cosas en una sola transaccion:
+ *
+ *  1. Deja asentada la compra en ingreso_materia_prima, con su precio y su
+ *     proveedor, que es el historial de a cuanto se fue comprando.
+ *  2. Suma la cantidad al stock y vuelve a calcular el costo promedio.
+ *
+ * El costo se recalcula con un promedio ponderado movil:
+ *
+ *     nuevo = (stock x costo + cantidad x precio) / (stock + cantidad)
+ *
+ * Se pondera contra el stock que queda y no contra todo lo comprado alguna
+ * vez, porque lo que ya se consumio no deberia seguir influyendo en cuanto
+ * vale lo que hay hoy en el deposito. De ese costo salen el valor de cada
+ * lote producido y la rentabilidad del panel de control.
+ *
+ * La fila del insumo se bloquea con FOR UPDATE antes de leer el stock. Acá
+ * el bloqueo pesa mas que en una venta: dos ingresos simultaneos leerian el
+ * mismo costo viejo y el promedio quedaria mal de forma permanente, porque
+ * ninguna operacion posterior lo corrige.
+ */
+rutasMateriasPrimas.post('/:id/ingresos', async (req, res, siguiente) => {
+  try {
+    const id = leerId(req);
+    if (id === null) return res.status(404).json({ error: 'La materia prima no existe' });
+
+    const { cantidad, precioUnitario, fechaVencimiento, idProveedor } = req.body ?? {};
+
+    const cantidadIngresada = aNumero(cantidad);
+    const precio = aNumero(precioUnitario);
+
+    if (cantidadIngresada === null || precio === null) {
+      return res.status(400).json({ error: 'Completa la cantidad y el precio unitario' });
+    }
+    if (cantidadIngresada <= 0) {
+      return res.status(400).json({ error: 'La cantidad ingresada tiene que ser mayor que cero' });
+    }
+    if (precio < 0) {
+      return res.status(400).json({ error: 'El precio unitario no puede ser negativo' });
+    }
+
+    /* El proveedor es obligatorio: la columna id_proveedor del ingreso no
+       admite nulos, porque una compra siempre se le hace a alguien. */
+    const { rows: proveedores } = await consultar(
+      'SELECT 1 FROM proveedor WHERE id_proveedor = $1',
+      [idProveedor]
+    );
+    if (proveedores.length === 0) {
+      return res.status(400).json({ error: 'El proveedor indicado no existe' });
+    }
+
+    const resultado = await conTransaccion(async (cliente) => {
+      const { rows } = await cliente.query(
+        `SELECT stock_actual, costo_promedio
+           FROM materia_prima
+          WHERE id_materia_prima = $1
+            FOR UPDATE`,
+        [id]
+      );
+      if (rows.length === 0) return { noExiste: true };
+
+      const stockPrevio = Number(rows[0].stock_actual);
+      const costoPrevio = Number(rows[0].costo_promedio);
+
+      const stockNuevo = stockPrevio + cantidadIngresada;
+      /* Con el stock en cero la formula da exactamente el precio nuevo, asi
+         que el caso no necesita un if aparte. */
+      const costoNuevo =
+        (stockPrevio * costoPrevio + cantidadIngresada * precio) / stockNuevo;
+
+      await cliente.query(
+        `INSERT INTO ingreso_materia_prima
+           (cantidad, precio_unitario, fecha_vencimiento,
+            id_materia_prima, id_usuario, id_proveedor)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [cantidadIngresada, precio, fechaVencimiento || null,
+         id, req.usuario.idUsuario, idProveedor]
+      );
+
+      await cliente.query(
+        `UPDATE materia_prima
+            SET stock_actual = $1, costo_promedio = $2
+          WHERE id_materia_prima = $3`,
+        [stockNuevo, costoNuevo, id]
+      );
+
+      return {};
+    });
+
+    if (resultado.noExiste) {
+      return res.status(404).json({ error: 'La materia prima no existe' });
+    }
+
+    res.status(201).json({ materiaPrima: aSalida(await leerMateriaPrima(id)) });
+  } catch (error) {
+    siguiente(error);
+  }
+});

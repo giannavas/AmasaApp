@@ -278,3 +278,145 @@ test('editar una materia prima inexistente da 404', async () => {
   });
   assert.equal(r.status, 404);
 });
+
+/* ------------------------------------ Registrar ingreso (reposicion) */
+
+/** Crea un insumo nuevo y devuelve su id, para no pisar los de otras pruebas. */
+async function crearInsumo(cambios = {}) {
+  const r = await pedir('', { cookie: cookieEncargado, metodo: 'POST', cuerpo: alta(cambios) });
+  return (await r.json()).materiaPrima.idMateriaPrima;
+}
+
+/** Lee stock y costo directo de la base. */
+async function leerStock(id) {
+  const { rows } = await consultar(
+    'SELECT stock_actual, costo_promedio FROM materia_prima WHERE id_materia_prima = $1',
+    [id]
+  );
+  return { stock: Number(rows[0].stock_actual), costo: Number(rows[0].costo_promedio) };
+}
+
+function ingresar(id, cuerpo, cookie = cookieEncargado) {
+  return pedir(`/${id}/ingresos`, { cookie, metodo: 'POST', cuerpo });
+}
+
+test('registrar un ingreso suma la cantidad al stock', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo suma', cantidad: 50, precioUnitario: 800 });
+
+  const r = await ingresar(id, { cantidad: 30, precioUnitario: 800, idProveedor });
+
+  assert.equal(r.status, 201);
+  assert.equal((await leerStock(id)).stock, 80);
+});
+
+test('registrar un ingreso recalcula el costo promedio ponderado', async () => {
+  // 50 kg a $800 mas 50 kg a $1000 dan 100 kg a $900.
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo costo', cantidad: 50, precioUnitario: 800 });
+
+  await ingresar(id, { cantidad: 50, precioUnitario: 1000, idProveedor });
+
+  assert.deepEqual(await leerStock(id), { stock: 100, costo: 900 });
+});
+
+test('el segundo ingreso promedia contra el costo ya actualizado', async () => {
+  /* Es el error facil de cometer: usar el stock y el costo originales en vez
+     de los que dejo el ingreso anterior.
+       50 a $800  +  50 a $1000  ->  100 a $900
+      100 a $900  + 100 a $1100  ->  200 a $1000 */
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo doble', cantidad: 50, precioUnitario: 800 });
+
+  await ingresar(id, { cantidad: 50, precioUnitario: 1000, idProveedor });
+  await ingresar(id, { cantidad: 100, precioUnitario: 1100, idProveedor });
+
+  assert.deepEqual(await leerStock(id), { stock: 200, costo: 1000 });
+});
+
+test('con el stock en cero el costo pasa a ser el precio nuevo', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo cero', cantidad: 10, precioUnitario: 800 });
+  await consultar('UPDATE materia_prima SET stock_actual = 0 WHERE id_materia_prima = $1', [id]);
+
+  await ingresar(id, { cantidad: 25, precioUnitario: 1500, idProveedor });
+
+  assert.deepEqual(await leerStock(id), { stock: 25, costo: 1500 });
+});
+
+test('el ingreso queda registrado con su precio y proveedor', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo historial', cantidad: 10, precioUnitario: 800 });
+
+  await ingresar(id, {
+    cantidad: 40, precioUnitario: 950, fechaVencimiento: '2027-12-31', idProveedor,
+  });
+
+  const { rows } = await consultar(
+    `SELECT cantidad, precio_unitario, fecha_vencimiento, id_proveedor
+       FROM ingreso_materia_prima
+      WHERE id_materia_prima = $1 ORDER BY id_ingreso DESC LIMIT 1`,
+    [id]
+  );
+  assert.equal(Number(rows[0].cantidad), 40);
+  assert.equal(Number(rows[0].precio_unitario), 950);
+  assert.equal(rows[0].id_proveedor, idProveedor);
+});
+
+test('reponer saca al insumo del estado Critico', async () => {
+  const id = await crearInsumo({
+    nombre: 'ZTEST03 Repo critico', cantidad: 5, stockMinimo: 10, stockMaximo: 100,
+  });
+
+  const antes = await (await pedir('', { cookie: cookieEncargado })).json();
+  assert.equal(antes.materiasPrimas.find((m) => m.idMateriaPrima === id).estado, 'Critico');
+
+  await ingresar(id, { cantidad: 50, precioUnitario: 800, idProveedor });
+
+  const despues = await (await pedir('', { cookie: cookieEncargado })).json();
+  assert.equal(despues.materiasPrimas.find((m) => m.idMateriaPrima === id).estado, 'OK');
+});
+
+test('rechaza una cantidad que no sea mayor que cero', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo cant' });
+
+  const r = await ingresar(id, { cantidad: 0, precioUnitario: 800, idProveedor });
+
+  assert.equal(r.status, 400);
+});
+
+test('rechaza un precio negativo', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo precio' });
+
+  const r = await ingresar(id, { cantidad: 10, precioUnitario: -5, idProveedor });
+
+  assert.equal(r.status, 400);
+});
+
+test('rechaza un proveedor que no existe', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo prov' });
+
+  const r = await ingresar(id, { cantidad: 10, precioUnitario: 800, idProveedor: 999999 });
+
+  assert.equal(r.status, 400);
+});
+
+test('registrar un ingreso en un insumo inexistente da 404', async () => {
+  const r = await ingresar(999999, { cantidad: 10, precioUnitario: 800, idProveedor });
+
+  assert.equal(r.status, 404);
+  // Que no sea el 404 generico de "ruta no encontrada".
+  assert.match((await r.json()).error, /materia prima/i);
+});
+
+test('un usuario de Venta no puede registrar un ingreso', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo rol' });
+
+  const r = await ingresar(id, { cantidad: 10, precioUnitario: 800, idProveedor }, cookieVenta);
+
+  assert.equal(r.status, 403);
+});
+
+test('un ingreso rechazado no modifica el stock ni el costo', async () => {
+  const id = await crearInsumo({ nombre: 'ZTEST03 Repo intacto', cantidad: 50, precioUnitario: 800 });
+
+  const r = await ingresar(id, { cantidad: 10, precioUnitario: 800, idProveedor: 999999 });
+
+  assert.equal(r.status, 400);
+  assert.deepEqual(await leerStock(id), { stock: 50, costo: 800 });
+});
