@@ -143,10 +143,23 @@ before(async () => {
   );
   ids.proveedor = proveedores[0].id_proveedor;
   const { rows: insumos } = await consultar(
-    `INSERT INTO materia_prima (nombre, unidad_medida, stock_actual, stock_minimo, stock_maximo)
-     VALUES ('ZTD Harina', 'kg', 100, 10, 200) RETURNING id_materia_prima`
+    `INSERT INTO materia_prima
+       (nombre, unidad_medida, stock_actual, stock_minimo, stock_maximo, costo_promedio)
+     VALUES ('ZTD Harina', 'kg', 100, 10, 200, 1000) RETURNING id_materia_prima`
   );
   ids.harina = insumos[0].id_materia_prima;
+
+  /* Costo unitario segun receta (RF-06), con la harina a $1000 el kg:
+       pan:      2 kg cada 10   -> $200 por unidad
+       facturas: 0.5 kg cada 10 -> $50 por unidad
+       torta:    sin receta     -> costo desconocido */
+  for (const [receta, kilos] of [['ZTD Receta pan', 2], ['ZTD Receta facturas', 0.5]]) {
+    await consultar(
+      `INSERT INTO receta_detalle (cantidad_requerida, id_receta, id_materia_prima)
+       VALUES ($1, $2, $3)`,
+      [kilos, ids[receta], ids.harina]
+    );
+  }
 
   await venta('2001-02-25 12:00', [['ZTD Pan', 3, 2000]]);
   await venta('2001-03-01 10:00', [['ZTD Pan', 2, 2000], ['ZTD Factura', 6, 500]]);
@@ -260,12 +273,72 @@ test('suma lo gastado en mercaderia como cantidad por precio', async () => {
 
 /* -------------------------------------------------------------- alertas */
 
-test('incluye el resumen de alertas vigentes', async () => {
-  const { alertas } = await panel(PERIODO);
+test('incluye las alertas activas, de stock bajo y de sobrestock', async () => {
+  const { alertas, indicadores } = await panel(PERIODO);
   assert.equal(alertas.resumen.criticas + alertas.resumen.sobrestock, alertas.resumen.total);
   assert.ok(Array.isArray(alertas.principales));
   assert.ok(alertas.principales.length <= 5);
-  assert.ok(alertas.principales.every((a) => a.tipo === 'StockCritico'));
+  assert.ok(alertas.principales.every((a) => ['StockCritico', 'Sobrestock'].includes(a.tipo)));
+  // El indicador de stock critico es la misma cuenta que el resumen.
+  assert.equal(indicadores.stockCritico, alertas.resumen.criticas);
+});
+
+/* ------------------------------------------------ indicadores de RF-08 */
+
+test('trae los cuatro indicadores de RF-08', async () => {
+  const { indicadores } = await panel(PERIODO);
+  assert.deepEqual(
+    Object.keys(indicadores),
+    ['stockCritico', 'produccionDelDia', 'ventasDelPeriodo', 'rentabilidadEstimada']
+  );
+  assert.equal(indicadores.ventasDelPeriodo, 19000);
+  assert.equal(indicadores.rentabilidadEstimada, 8100);
+});
+
+test('estima la rentabilidad con el costo unitario segun la receta', async () => {
+  const { rentabilidad } = await panel(PERIODO);
+  /* Pan:     2 u  -> $4000 vendidos, $400 de costo
+     Factura: 10 u -> $5000 vendidos, $500 de costo
+     Torta: sin receta, queda afuera y se informa */
+  assert.deepEqual(rentabilidad, {
+    ganancia: 8100,
+    margen: 90,
+    ingresos: 9000,
+    costo: 900,
+    productosSinReceta: [{ nombre: 'ZTD Torta', importe: 10000 }],
+  });
+});
+
+test('los mas vendidos traen su costo unitario, o null si no tienen receta', async () => {
+  const { productosMasVendidos } = await panel(PERIODO);
+  assert.deepEqual(
+    productosMasVendidos.map((p) => [p.nombre, p.costoUnitario]),
+    [['ZTD Factura', 50], ['ZTD Pan', 200], ['ZTD Torta', null]]
+  );
+});
+
+test('si solo se vendieron productos sin receta la rentabilidad es N/D', async () => {
+  const { rentabilidad, indicadores } = await panel('?desde=2001-03-07&hasta=2001-03-07');
+  assert.equal(rentabilidad.ganancia, null);
+  assert.equal(indicadores.rentabilidadEstimada, null);
+  assert.equal(rentabilidad.productosSinReceta.length, 1);
+});
+
+test('la produccion del dia es la de hoy, no la del periodo elegido', async () => {
+  await consultar(
+    `INSERT INTO lote_produccion (fecha, cantidad_producida, costo_total, id_receta, id_usuario)
+     VALUES (CURRENT_DATE, 12, 2400, $1, $2)`,
+    [ids['ZTD Receta pan'], idUsuario]
+  );
+  const { indicadores, produccion } = await panel(PERIODO);
+  const { rows } = await consultar("SELECT to_char(CURRENT_DATE, 'YYYY-MM-DD') AS hoy");
+
+  assert.equal(indicadores.produccionDelDia.fecha, rows[0].hoy);
+  // Otras pruebas pueden producir hoy en paralelo: al menos esta lo cuenta.
+  assert.ok(indicadores.produccionDelDia.lotes >= 1);
+  assert.ok(indicadores.produccionDelDia.unidades >= 12);
+  // El lote de hoy no se mezcla con el periodo de 2001.
+  assert.equal(produccion.lotes, 2);
 });
 
 /* ------------------------------------------------------------- periodos */
@@ -273,7 +346,9 @@ test('incluye el resumen de alertas vigentes', async () => {
 test('un periodo sin movimientos devuelve todo en cero', async () => {
   const datos = await panel('?desde=1990-01-01&hasta=1990-01-03');
   assert.equal(datos.ventas.total, 0);
-  assert.equal(datos.ventas.ticketPromedio, 0);
+  // Sin ventas no hay ticket ni rentabilidad que calcular: N/D (CU-12, 1.a).
+  assert.equal(datos.ventas.ticketPromedio, null);
+  assert.equal(datos.indicadores.rentabilidadEstimada, null);
   assert.deepEqual(datos.produccion, { lotes: 0, unidades: 0, costo: 0 });
   assert.deepEqual(datos.compras, { ingresos: 0, total: 0 });
   assert.deepEqual(datos.productosMasVendidos, []);
