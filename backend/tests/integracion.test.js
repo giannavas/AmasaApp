@@ -14,12 +14,14 @@ import { hashearPassword } from '../src/auth/password.js';
      Encargado    CU-11 alta del proveedor
                   CU-03 alta de la harina: 20 kg a $1000 (minimo 5)
                         alta del pan ($3000, minimo 5) y su receta: 5 kg cada 10
+                  CU-09 sube el minimo de la harina a 8
      Panificador  CU-06 produce 30 panes: consume 15 kg, la harina queda en 5
-     Encargado    CU-09 la harina aparece en alerta, con su proveedor
+     Encargado    CU-10 la harina aparece en alerta, con su proveedor
      Venta        CU-07 vende 27 panes: el pan queda en 3
-     Encargado    CU-09 el pan tambien aparece en alerta
+     Encargado    CU-10 el pan tambien aparece en alerta
                   CU-08 la venta figura en el historial
-                  CU-12 el panel muestra la venta y el lote del dia
+                  CU-12 el panel muestra la venta, el lote y la rentabilidad
+                        estimada con el costo segun la receta
      Panificador  CU-06 no puede producir otros 20: faltan insumos
 
    Los movimientos llevan fecha 10/06/2002 para que el panel de ese dia solo
@@ -141,7 +143,16 @@ test('recien cargado, el pan sin stock ya figura en alerta y la harina no', asyn
   assert.deepEqual(alertas.map((a) => [a.nombre, a.sinStock]), [['ZTI Pan', true]]);
 });
 
-test('el Panificador produce un lote y la harina queda en su minimo', async () => {
+test('el Encargado configura el umbral minimo de la harina (CU-09)', async () => {
+  // Caso de prueba 14 del documento, paso 1.
+  const { estado } = await como('encargado', '/api/alertas/umbrales', {
+    metodo: 'PUT',
+    cuerpo: { umbrales: [{ origen: 'Insumo', id: ids.harina, stockMinimo: 8, stockMaximo: 50 }] },
+  });
+  assert.equal(estado, 200);
+});
+
+test('el Panificador produce un lote y la harina queda por debajo del minimo', async () => {
   const lote = await como('panificador', '/api/produccion', {
     metodo: 'POST',
     cuerpo: { idReceta: ids.receta, cantidadProducida: 30, fecha: DIA },
@@ -189,16 +200,20 @@ test('la venta figura en el historial del dia', async () => {
   assert.equal(datos.ventas[0].detalles[0].cantidad, 27);
 });
 
-test('el panel del dia muestra la venta, el lote y el producto mas vendido', async () => {
+test('el panel del dia muestra la venta, el lote, la rentabilidad y el mas vendido', async () => {
   const { estado, datos } = await como('encargado', `/api/panel?desde=${DIA}&hasta=${DIA}`);
   assert.equal(estado, 200);
   assert.equal(datos.ventas.total, 81000);
   assert.equal(datos.ventas.unidades, 27);
   assert.deepEqual(datos.produccion, { lotes: 1, unidades: 30, costo: 15000 });
   assert.deepEqual(
-    datos.productosMasVendidos.map((p) => [p.nombre, p.unidades]),
-    [['ZTI Pan', 27]]
+    datos.productosMasVendidos.map((p) => [p.nombre, p.unidades, p.costoUnitario]),
+    [['ZTI Pan', 27, 500]]
   );
+  /* Caso de prueba 15: costo unitario segun la receta, 5 kg de harina a $1000
+     cada 10 panes = $500. Vendidos 27 a $3000: $81000 - $13500 = $67500. */
+  assert.equal(datos.indicadores.rentabilidadEstimada, 67500);
+  assert.equal(datos.rentabilidad.margen, 83.33);
   assert.ok(datos.alertas.resumen.criticas >= 2);
 });
 
