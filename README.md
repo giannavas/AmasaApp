@@ -24,12 +24,18 @@ Proyecto de Prácticas Profesionalizantes I — Escuela Superior de Comercio Nº
 | Productos y recetas | Productos, Recetas | `/api/productos`, `/api/recetas` | Encargado (el catálogo de productos lo leen todos) |
 | CU-06 Registrar lote de producción | Produccion | `/api/produccion` | Panificador, Encargado |
 | CU-07 / 08 Ventas | Ventas | `/api/ventas` | Todos |
-| CU-09 / 10 Alertas de stock | Alertas (y el contador de la barra) | `/api/alertas` | Encargado |
-| CU-12 Panel de control | Inicio | `/api/panel` | Encargado |
+| CU-09 Configurar umbrales de stock | Alertas (tabla "Configurar umbrales") | `/api/alertas/umbrales` | Encargado |
+| CU-10 Visualizar alertas activas | Alertas, Inicio y el contador de la barra | `/api/alertas`, `/api/alertas/:origen/:id` | Encargado |
+| CU-12 Visualizar dashboard | Inicio | `/api/panel` | Encargado |
 
 Las alertas y el panel no tienen tablas propias: se calculan en el momento a
 partir del stock, las ventas, los lotes y los ingresos de mercadería
 (`backend/src/servicios/`). Por eso nunca contradicen a los datos.
+
+La rentabilidad estimada del panel usa el costo unitario de cada producto
+según su receta (RF-06): la suma de cada insumo por su costo promedio,
+dividida por las unidades que rinde. Un producto sin receta no tiene costo
+conocido y queda fuera de la estimación; el panel lo aclara.
 
 ## Instalación
 
