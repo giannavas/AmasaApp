@@ -354,6 +354,13 @@ async function historial(consulta = '') {
   return { estado: r.status, cuerpo: await r.json() };
 }
 
+/* Las ventas de prueba se fechan en 2024 y el historial se consulta acotado a
+   ese año. El listado devuelve todas las ventas de la base, no solo las de la
+   prueba, asi que contar el total haria que estos tests se rompieran en
+   cuanto la base tenga ventas de verdad. */
+const ANIO = '?desde=2024-01-01&hasta=2024-12-31';
+const enAnio = (resto = '') => `${ANIO}${resto}`;
+
 test('sin sesion no se puede consultar el historial', async () => {
   const r = await fetch(`${base}/api/ventas`);
   assert.equal(r.status, 401);
@@ -361,10 +368,10 @@ test('sin sesion no se puede consultar el historial', async () => {
 
 test('el historial lista las ventas registradas', async () => {
   await reiniciar();
-  await vender([{ idProducto: idCañoncito, cantidad: 2 }]);
-  await vender([{ idProducto: idPan, cantidad: 1 }]);
+  await vender([{ idProducto: idCañoncito, cantidad: 2 }], '2024-05-01');
+  await vender([{ idProducto: idPan, cantidad: 1 }], '2024-05-02');
 
-  const { estado, cuerpo } = await historial();
+  const { estado, cuerpo } = await historial(enAnio());
 
   assert.equal(estado, 200);
   assert.equal(cuerpo.ventas.length, 2);
@@ -372,10 +379,10 @@ test('el historial lista las ventas registradas', async () => {
 
 test('el historial trae las ventas mas nuevas primero', async () => {
   await reiniciar();
-  const vieja = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
-  const nueva = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-09-01');
+  const vieja = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-03-01');
+  const nueva = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-09-01');
 
-  const { cuerpo } = await historial();
+  const { cuerpo } = await historial(enAnio());
 
   assert.equal(cuerpo.ventas[0].idVenta, nueva.idVenta);
   assert.equal(cuerpo.ventas[1].idVenta, vieja.idVenta);
@@ -386,9 +393,9 @@ test('cada venta del historial trae su detalle', async () => {
   await vender([
     { idProducto: idCañoncito, cantidad: 4 },
     { idProducto: idPan, cantidad: 1 },
-  ]);
+  ], '2024-07-01');
 
-  const { cuerpo } = await historial();
+  const { cuerpo } = await historial(enAnio());
   const [venta] = cuerpo.ventas;
 
   assert.equal(venta.detalles.length, 2);
@@ -397,10 +404,10 @@ test('cada venta del historial trae su detalle', async () => {
 
 test('el historial se puede filtrar por producto', async () => {
   await reiniciar();
-  await vender([{ idProducto: idCañoncito, cantidad: 1 }]);
-  await vender([{ idProducto: idPan, cantidad: 1 }]);
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-04-01');
+  await vender([{ idProducto: idPan, cantidad: 1 }], '2024-04-02');
 
-  const { cuerpo } = await historial(`?idProducto=${idPan}`);
+  const { cuerpo } = await historial(enAnio(`&idProducto=${idPan}`));
 
   assert.equal(cuerpo.ventas.length, 1);
   assert.equal(cuerpo.ventas[0].detalles[0].idProducto, idPan);
@@ -413,9 +420,9 @@ test('filtrar por producto trae la venta completa, no solo esa linea', async () 
   await vender([
     { idProducto: idCañoncito, cantidad: 2 },
     { idProducto: idPan, cantidad: 1 },
-  ]);
+  ], '2024-04-03');
 
-  const { cuerpo } = await historial(`?idProducto=${idPan}`);
+  const { cuerpo } = await historial(enAnio(`&idProducto=${idPan}`));
 
   assert.equal(cuerpo.ventas.length, 1);
   assert.equal(cuerpo.ventas[0].detalles.length, 2);
@@ -423,10 +430,10 @@ test('filtrar por producto trae la venta completa, no solo esa linea', async () 
 
 test('el historial se puede filtrar desde una fecha', async () => {
   await reiniciar();
-  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
-  const nueva = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-09-01');
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-03-01');
+  const nueva = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-09-01');
 
-  const { cuerpo } = await historial('?desde=2026-06-01');
+  const { cuerpo } = await historial('?desde=2024-06-01&hasta=2024-12-31');
 
   assert.equal(cuerpo.ventas.length, 1);
   assert.equal(cuerpo.ventas[0].idVenta, nueva.idVenta);
@@ -434,10 +441,10 @@ test('el historial se puede filtrar desde una fecha', async () => {
 
 test('el historial se puede filtrar hasta una fecha', async () => {
   await reiniciar();
-  const vieja = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
-  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-09-01');
+  const vieja = await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-03-01');
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-09-01');
 
-  const { cuerpo } = await historial('?hasta=2026-06-01');
+  const { cuerpo } = await historial('?desde=2024-01-01&hasta=2024-06-01');
 
   assert.equal(cuerpo.ventas.length, 1);
   assert.equal(cuerpo.ventas[0].idVenta, vieja.idVenta);
@@ -447,18 +454,18 @@ test('el filtro hasta incluye las ventas de ese mismo dia', async () => {
   // Una venta del 1 de marzo a las 14:30 tiene que entrar en "hasta el 1 de
   // marzo". Comparar el timestamp crudo contra la medianoche la dejaria afuera.
   await reiniciar();
-  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01 14:30');
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-03-01 14:30');
 
-  const { cuerpo } = await historial('?hasta=2026-03-01');
+  const { cuerpo } = await historial('?desde=2024-03-01&hasta=2024-03-01');
 
   assert.equal(cuerpo.ventas.length, 1);
 });
 
 test('el historial sin resultados devuelve una lista vacia', async () => {
   await reiniciar();
-  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2026-03-01');
+  await vender([{ idProducto: idCañoncito, cantidad: 1 }], '2024-03-01');
 
-  const { estado, cuerpo } = await historial('?desde=2026-08-01');
+  const { estado, cuerpo } = await historial('?desde=2024-08-01&hasta=2024-12-31');
 
   assert.equal(estado, 200);
   assert.deepEqual(cuerpo.ventas, []);
