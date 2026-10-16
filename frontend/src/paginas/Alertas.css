@@ -1,0 +1,93 @@
+/* CU-09 y CU-10 - Pantalla de alertas. Dos columnas como en el wireframe:
+   configurar umbrales a la izquierda, alertas activas a la derecha. En
+   pantallas angostas quedan una debajo de la otra. */
+
+.alertas-columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  gap: var(--esp-5);
+  align-items: start;
+}
+
+.umbrales-filtros {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--esp-3);
+}
+
+.umbrales-filtros input { min-width: 0; width: 100%; }
+
+/* La tabla puede tener muchos items: se desplaza dentro de su marco para
+   que el boton de guardar quede siempre a la vista. */
+.umbrales-tabla { max-height: 28rem; overflow-y: auto; }
+
+.umbrales-tabla thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-superficie);
+  z-index: 1;
+}
+
+.umbral__campo {
+  width: 5.5rem;
+  font: inherit;
+  font-family: var(--fuente-datos);
+  text-align: right;
+  padding: var(--esp-1) var(--esp-2);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-fondo);
+  color: var(--color-texto);
+}
+
+.umbral__campo:focus-visible { outline: 2px solid var(--color-primario); outline-offset: 1px; }
+
+.umbral__campo[aria-invalid='true'] { border-color: var(--color-error); }
+
+/* Fila editada sin guardar: una marca al costado, para saber que falta
+   confirmar. */
+.umbral--cambiado td:first-child { box-shadow: inset 3px 0 0 var(--color-acento); }
+
+/* Fila a la que se llego desde el detalle de una alerta. */
+.umbral--resaltado td { background: var(--color-fondo); }
+
+.umbral__error {
+  display: block;
+  margin-top: var(--esp-1);
+  font-size: var(--tam-xs);
+  font-weight: 600;
+  color: var(--color-error);
+}
+
+/* Filtro de alertas en forma de botones pegados. */
+.selector {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-self: start;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  overflow: hidden;
+}
+
+.selector__opcion {
+  background: var(--color-superficie);
+  border: none;
+  border-right: 1px solid var(--color-borde);
+  padding: var(--esp-1) var(--esp-3);
+  font-size: var(--tam-sm);
+  color: var(--color-texto-suave);
+}
+
+.selector__opcion:last-child { border-right: none; }
+.selector__opcion:hover { background: var(--color-fondo); color: var(--color-texto); }
+
+.selector__opcion--activa,
+.selector__opcion--activa:hover {
+  background: var(--color-primario);
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (max-width: 30rem) {
+  .umbral__campo { width: 4.25rem; }
+}

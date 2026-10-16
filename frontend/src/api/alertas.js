@@ -1,11 +1,11 @@
 /**
- * Llamadas a la API de alertas de stock (CU-09 y CU-10).
+ * Llamadas a la API de umbrales y alertas de stock (CU-09 y CU-10).
  */
 
 async function procesar(respuesta) {
   const datos = await respuesta.json().catch(() => ({}));
   if (!respuesta.ok) {
-    throw new Error(datos.error || 'No se pudieron consultar las alertas');
+    throw new Error(datos.error || 'No se pudo completar la operacion');
   }
   return datos;
 }
@@ -30,4 +30,30 @@ export async function listarAlertas({ tipo, origen } = {}) {
 export async function obtenerResumenAlertas() {
   const respuesta = await fetch('/api/alertas/resumen', { credentials: 'same-origin' });
   return (await procesar(respuesta)).resumen;
+}
+
+/** CU-09: todos los items con sus umbrales. */
+export async function listarUmbrales() {
+  const respuesta = await fetch('/api/alertas/umbrales', { credentials: 'same-origin' });
+  return (await procesar(respuesta)).umbrales;
+}
+
+/**
+ * CU-09: guarda los umbrales cambiados. O se guardan todos o ninguno.
+ * Devuelve { umbrales, alertas } ya actualizados.
+ */
+export async function guardarUmbrales(umbrales) {
+  const respuesta = await fetch('/api/alertas/umbrales', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ umbrales }),
+  });
+  return procesar(respuesta);
+}
+
+/** CU-10, paso 3: detalle ampliado de un item. */
+export async function obtenerDetalleAlerta(origen, id) {
+  const respuesta = await fetch(`/api/alertas/${origen}/${id}`, { credentials: 'same-origin' });
+  return (await procesar(respuesta)).detalle;
 }
