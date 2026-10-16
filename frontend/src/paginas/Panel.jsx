@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { obtenerPanel } from '../api/panel.js';
+import AlertasActivas from '../componentes/AlertasActivas.jsx';
 import './Panel.css';
 
 const redondear = (numero) => Math.round(numero * 100) / 100;
@@ -140,10 +141,13 @@ export default function Panel({ usuario, alIrA }) {
       ) : (
         <div className={`panel-control ${cargando ? 'panel-control--cargando' : ''}`} aria-busy={cargando}>
           <Indicadores datos={datos} />
-          <GraficoVentas dias={datos.ventasPorDia} />
+          <div className="panel-control__principal">
+            <GraficoVentas dias={datos.ventasPorDia} />
+            <AlertasPanel alertas={datos.alertas} alIrA={alIrA} />
+          </div>
           <div className="panel-control__columnas">
             <MasVendidos productos={datos.productosMasVendidos} />
-            <AlertasPanel alertas={datos.alertas} alIrA={alIrA} />
+            <ProduccionYCompras produccion={datos.produccion} compras={datos.compras} />
           </div>
         </div>
       )}
@@ -158,7 +162,7 @@ function Variacion({ ventas }) {
   const referencia = `vs. ${diaMes(periodoAnterior.desde)} al ${diaMes(periodoAnterior.hasta)}`;
 
   if (variacion === null) {
-    return <dd className="indicador__detalle">Sin ventas en el periodo anterior para comparar</dd>;
+    return <dd className="indicador__detalle">N/D contra el periodo anterior (sin ventas)</dd>;
   }
   // La flecha y el signo dicen lo mismo que el color, para quien no lo distingue.
   const sube = variacion >= 0;
@@ -169,35 +173,55 @@ function Variacion({ ventas }) {
   );
 }
 
+/** CU-12, flujo alternativo 1.a: lo que no se puede calcular se muestra "N/D". */
+const oND = (valor, formato) => (valor === null || valor === undefined ? 'N/D' : formato(valor));
+
+/**
+ * Los cuatro indicadores de RF-08, en el orden del wireframe: stock critico,
+ * produccion del dia, ventas del periodo y rentabilidad estimada.
+ */
 function Indicadores({ datos }) {
-  const { ventas, produccion, compras } = datos;
+  const { indicadores, ventas, rentabilidad, alertas } = datos;
+  const delDia = indicadores.produccionDelDia;
   return (
-    <dl className="indicadores" aria-label="Indicadores del periodo">
+    <dl className="indicadores" aria-label="Indicadores principales">
+      <div className={`indicador ${indicadores.stockCritico > 0 ? 'indicador--error' : ''}`}>
+        <dt>Stock critico</dt>
+        <dd className="dato">{cantidad(indicadores.stockCritico)}</dd>
+        <dd className="indicador__detalle">
+          {indicadores.stockCritico === 1 ? 'item' : 'items'} en el minimo o por debajo
+          {alertas.resumen.sinStock > 0 && ` · ${alertas.resumen.sinStock} sin stock`}
+        </dd>
+      </div>
       <div className="indicador">
-        <dt>Facturado</dt>
-        <dd className="dato">{pesos(ventas.total)}</dd>
+        <dt>Produccion del dia</dt>
+        <dd className="dato">{cantidad(delDia.unidades)} u</dd>
+        <dd className="indicador__detalle">
+          {cantidad(delDia.lotes)} {delDia.lotes === 1 ? 'lote' : 'lotes'} hoy, {diaMes(delDia.fecha)}
+        </dd>
+      </div>
+      <div className="indicador">
+        <dt>Ventas del periodo</dt>
+        <dd className="dato">{pesos(indicadores.ventasDelPeriodo)}</dd>
         <Variacion ventas={ventas} />
-      </div>
-      <div className="indicador">
-        <dt>Ventas</dt>
-        <dd className="dato">{cantidad(ventas.cantidad)}</dd>
         <dd className="indicador__detalle">
-          {cantidad(ventas.unidades)} unidades · ticket promedio {pesos(ventas.ticketPromedio)}
+          {cantidad(ventas.cantidad)} {ventas.cantidad === 1 ? 'venta' : 'ventas'} · ticket promedio{' '}
+          {oND(ventas.ticketPromedio, pesos)}
         </dd>
       </div>
       <div className="indicador">
-        <dt>Producido</dt>
-        <dd className="dato">{cantidad(produccion.unidades)} u</dd>
+        <dt>Rentabilidad estimada</dt>
+        <dd className="dato">{oND(indicadores.rentabilidadEstimada, pesos)}</dd>
         <dd className="indicador__detalle">
-          {cantidad(produccion.lotes)} {produccion.lotes === 1 ? 'lote' : 'lotes'} · costo {pesos(produccion.costo)}
+          {rentabilidad.ganancia === null
+            ? 'Sin ventas de productos con receta para calcularla'
+            : `margen ${oND(rentabilidad.margen, (m) => `${m.toLocaleString('es-AR')} %`)} · costo segun receta ${pesos(rentabilidad.costo)}`}
         </dd>
-      </div>
-      <div className="indicador">
-        <dt>Compras de insumos</dt>
-        <dd className="dato">{pesos(compras.total)}</dd>
-        <dd className="indicador__detalle">
-          {cantidad(compras.ingresos)} {compras.ingresos === 1 ? 'ingreso' : 'ingresos'} de mercaderia
-        </dd>
+        {rentabilidad.productosSinReceta.length > 0 && (
+          <dd className="indicador__detalle">
+            No incluye {rentabilidad.productosSinReceta.map((p) => p.nombre).join(', ')} (sin receta)
+          </dd>
+        )}
       </div>
     </dl>
   );
@@ -225,7 +249,7 @@ function GraficoVentas({ dias }) {
   return (
     <figure className="panel-tarjeta grafico">
       <figcaption className="panel-tarjeta__titulo">
-        Facturado por dia
+        Ventas del periodo, por dia
         <span className="panel-tarjeta__nota">
           {conVentas} de {dias.length} {dias.length === 1 ? 'dia' : 'dias'} con ventas
         </span>
@@ -294,12 +318,15 @@ function MasVendidos({ productos }) {
       {productos.length === 0 ? (
         <p className="mensaje-vacio">Sin ventas en el periodo.</p>
       ) : (
+        // En pantallas angostas la tabla se desplaza sola, sin mover la pagina.
+        <div className="tabla-desplazable">
         <table className="tabla">
           <thead>
             <tr>
               <th>Producto</th>
               <th className="numero">Unidades</th>
               <th className="numero">Facturado</th>
+              <th className="numero">Costo c/u</th>
             </tr>
           </thead>
           <tbody>
@@ -308,10 +335,12 @@ function MasVendidos({ productos }) {
                 <td>{p.nombre}</td>
                 <td className="numero">{cantidad(p.unidades)}</td>
                 <td className="numero">{pesos(p.importe)}</td>
+                <td className="numero">{oND(p.costoUnitario, pesos)}</td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   );
@@ -319,44 +348,42 @@ function MasVendidos({ productos }) {
 
 /* ------------------------------------------------------------ alertas */
 
+/**
+ * CU-10 en el panel principal: las alertas activas, de stock bajo y de
+ * sobrestock, con el detalle de cada una al seleccionarla.
+ */
 function AlertasPanel({ alertas, alIrA }) {
   const { resumen, principales } = alertas;
+  const restantes = resumen.total - principales.length;
   return (
     <section className="panel-tarjeta">
       <h3 className="panel-tarjeta__titulo">
-        Stock ahora
-        <span className="panel-tarjeta__nota">no depende del periodo</span>
+        Alertas activas
+        <span className="panel-tarjeta__nota">stock de ahora</span>
       </h3>
-
-      {resumen.total === 0 ? (
-        <p className="mensaje-vacio">Todo el stock esta dentro de sus umbrales.</p>
-      ) : (
-        <>
-          <p className="panel-alertas__resumen">
-            <span className="etiqueta etiqueta--error">{resumen.criticas} criticas</span>
-            {resumen.sinStock > 0 && (
-              <span className="etiqueta etiqueta--error">{resumen.sinStock} sin stock</span>
-            )}
-            <span className="etiqueta etiqueta--aviso">{resumen.sobrestock} sobrestock</span>
-          </p>
-          {principales.length > 0 && (
-            <ul className="panel-alertas__lista">
-              {principales.map((a) => (
-                <li key={`${a.origen}-${a.id}`}>
-                  <span>{a.nombre}</span>
-                  <span className="dato panel-alertas__stock">
-                    {cantidad(a.stockActual)} / {cantidad(a.stockMinimo)} {a.unidad}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+      <AlertasActivas alertas={principales} />
+      {resumen.total > 0 && (
+        <button className="boton boton--secundario boton--chico" onClick={() => alIrA('alertas')}>
+          {restantes > 0 ? `Ver las ${resumen.total} alertas` : 'Ir a alertas y umbrales'}
+        </button>
       )}
+    </section>
+  );
+}
 
-      <button className="boton boton--secundario boton--chico" onClick={() => alIrA('alertas')}>
-        Ver todas las alertas
-      </button>
+/* ------------------------------------------------- produccion y compras */
+
+function ProduccionYCompras({ produccion, compras }) {
+  return (
+    <section className="panel-tarjeta">
+      <h3 className="panel-tarjeta__titulo">Produccion y compras del periodo</h3>
+      <dl className="datos-usuario">
+        <dt>Lotes</dt><dd className="dato">{cantidad(produccion.lotes)}</dd>
+        <dt>Unidades</dt><dd className="dato">{cantidad(produccion.unidades)} u</dd>
+        <dt>Costo producido</dt><dd className="dato">{pesos(produccion.costo)}</dd>
+        <dt>Ingresos de insumos</dt><dd className="dato">{cantidad(compras.ingresos)}</dd>
+        <dt>Gastado en insumos</dt><dd className="dato">{pesos(compras.total)}</dd>
+      </dl>
     </section>
   );
 }
