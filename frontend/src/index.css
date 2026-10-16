@@ -464,3 +464,62 @@ button { font: inherit; cursor: pointer; }
 
 /* Textos cortos que se leen como una unidad ("Comprar 100 kg"). */
 .sin-corte { white-space: nowrap; }
+
+/* ----------------------------------------- tarjetas de contenido (CU-10/12) */
+
+/* Recuadro con titulo chico en mayusculas. Lo usan el panel de control y la
+   pantalla de alertas. */
+.panel-tarjeta {
+  margin: 0;
+  display: grid;
+  gap: var(--esp-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-5);
+  min-width: 0;
+}
+
+/* Una tabla suelta en la tarjeta se alinea con el titulo; dentro de su
+   propio marco (tabla-envoltorio) conserva el margen interno. */
+.panel-tarjeta > .tabla td,
+.panel-tarjeta > .tabla th,
+.tabla-desplazable > .tabla td,
+.tabla-desplazable > .tabla th { padding-left: 0; }
+
+.tabla-desplazable { overflow-x: auto; }
+
+.panel-tarjeta__titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--esp-3);
+  flex-wrap: wrap;
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  margin: 0;
+}
+
+.panel-tarjeta__nota {
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.panel-tarjeta > .boton { justify-self: start; }
+
+
+/* Confirmacion de una operacion: mismo formato que el error, en verde. */
+.mensaje-exito {
+  color: var(--color-ok);
+  background: var(--color-ok-fondo);
+  border: 1px solid var(--color-ok);
+  border-radius: var(--radio-sm);
+  padding: var(--esp-2) var(--esp-3);
+  font-size: var(--tam-sm);
+  font-weight: 600;
+}

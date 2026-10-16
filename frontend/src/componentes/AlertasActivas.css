@@ -1,0 +1,94 @@
+/* CU-10 - Tarjetas de alertas activas y su detalle. */
+
+.alertas-activas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--esp-2);
+}
+
+.alerta {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.alerta--abierta { border-color: var(--color-primario); }
+
+/* Toda la tarjeta es el boton: se puede tocar en cualquier parte, y con el
+   teclado se llega con Tab y se abre con Enter. */
+.alerta__resumen {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  background: none;
+  border: none;
+  border-radius: var(--radio-md);
+  text-align: left;
+  color: var(--color-texto);
+}
+
+.alerta__resumen:hover { background: var(--color-fondo); }
+
+.alerta__textos { display: grid; gap: 2px; min-width: 0; }
+
+.alerta__nombre { font-weight: 600; }
+
+.alerta__linea {
+  font-size: var(--tam-xs);
+  color: var(--color-texto-suave);
+}
+
+.alerta__detalle {
+  display: grid;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4) var(--esp-4);
+  border-top: 1px solid var(--color-borde);
+}
+
+.alerta__detalle > .boton { justify-self: start; }
+
+.detalle-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--esp-3);
+  margin: 0;
+}
+
+.detalle-datos dt {
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+}
+
+.detalle-datos dd { margin: 0; font-weight: 600; }
+
+.detalle-linea { font-size: var(--tam-sm); }
+
+.detalle-movimientos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--tam-sm);
+}
+
+.detalle-movimientos li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1) var(--esp-4);
+  padding: var(--esp-1) 0;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.detalle-movimientos li span:first-child {
+  font-family: var(--fuente-datos);
+  font-size: var(--tam-xs);
+  color: var(--color-texto-suave);
+  min-width: 5.5rem;
+}

@@ -115,7 +115,7 @@
   gap: var(--esp-2);
 }
 
-/* Contador de alertas junto al enlace de la seccion (CU-09). Rojo si hay
+/* Contador de alertas junto al enlace de la seccion (CU-10). Rojo si hay
    alguna critica; si solo hay sobrestock, en el tono de aviso. */
 .navegacion__contador {
   display: inline-block;

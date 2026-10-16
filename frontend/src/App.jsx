@@ -34,7 +34,7 @@ export default function App() {
 
   const esEncargado = usuario?.rol === 'Encargado';
 
-  /* CU-09: el aviso de alertas de la barra se actualiza al entrar y cada vez
+  /* CU-10: el aviso de alertas de la barra se actualiza al entrar y cada vez
      que se cambia de pantalla. Es el momento en que el stock pudo haber
      cambiado (se vendio, se produjo o se compro algo) y no hace falta
      consultar al servidor cada pocos segundos para enterarse. */
