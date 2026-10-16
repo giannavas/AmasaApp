@@ -4,7 +4,7 @@ import { app } from '../src/app.js';
 import { pool, consultar } from '../src/config/db.js';
 import { hashearPassword } from '../src/auth/password.js';
 
-/* CU-09 y CU-10: alertas de stock. Prefijo ZTA para aislar los datos.
+/* CU-09 y CU-10: umbrales y alertas de stock. Prefijo ZTA para aislar los datos.
 
    Las pruebas corren en paralelo con las de los otros modulos sobre la misma
    base, asi que el listado puede traer alertas ajenas. Por eso cada prueba
@@ -97,6 +97,7 @@ async function limpiar() {
     `DELETE FROM venta WHERE id_usuario IN
        (SELECT id_usuario FROM usuario WHERE email LIKE 'alerta.%')`
   );
+  await consultar("DELETE FROM receta WHERE nombre LIKE 'ZTA%'");
   await consultar("DELETE FROM producto WHERE nombre LIKE 'ZTA%'");
   await consultar("DELETE FROM materia_prima WHERE nombre LIKE 'ZTA%'");
   await consultar("DELETE FROM proveedor WHERE razon_social LIKE 'ZTA%'");
@@ -164,7 +165,7 @@ test('el resumen tambien es solo del Encargado', async () => {
   assert.equal(r.status, 403);
 });
 
-/* ------------------------------------------------------- CU-09: deteccion */
+/* ------------------------------------------- CU-10: deteccion de alertas */
 
 test('un insumo por debajo del minimo genera una alerta de stock critico', async () => {
   const { alertas } = await alertasZTA();
@@ -324,4 +325,184 @@ test('bajar el umbral minimo de un insumo (CU-04) apaga su alerta', async () => 
 
   const { alertas } = await alertasZTA();
   assert.equal(buscar(alertas, 'ZTA Azucar'), undefined);
+});
+
+/* ------------------------------------------ CU-09: configurar umbrales */
+
+function guardar(umbrales, cookie = cookieEncargado) {
+  return pedir('/api/alertas/umbrales', { cookie, metodo: 'PUT', cuerpo: { umbrales } });
+}
+
+async function umbralesDe(nombre) {
+  const { umbrales } = await (await pedir('/api/alertas/umbrales', { cookie: cookieEncargado })).json();
+  return umbrales.find((u) => u.nombre === nombre);
+}
+
+test('la tabla de umbrales trae todos los insumos y productos, esten o no en alerta', async () => {
+  const r = await pedir('/api/alertas/umbrales', { cookie: cookieEncargado });
+  assert.equal(r.status, 200);
+  const { umbrales } = await r.json();
+  const levadura = umbrales.find((u) => u.nombre === 'ZTA Levadura');
+  assert.deepEqual(
+    { origen: levadura.origen, minimo: levadura.stockMinimo, maximo: levadura.stockMaximo },
+    { origen: 'Insumo', minimo: 10, maximo: 20 }
+  );
+  assert.equal(umbrales.find((u) => u.nombre === 'ZTA Medialuna').unidad, 'u');
+});
+
+test('solo el Encargado configura umbrales', async () => {
+  assert.equal((await pedir('/api/alertas/umbrales', { cookie: cookieVenta })).status, 403);
+  const r = await guardar(
+    [{ origen: 'Insumo', id: ids['ZTA Levadura'], stockMinimo: 1, stockMaximo: 2 }],
+    cookiePanificador
+  );
+  assert.equal(r.status, 403);
+});
+
+test('subir el minimo por encima del stock genera la alerta en el momento', async () => {
+  /* Caso de prueba 14 del documento: se configura el umbral y el sistema
+     muestra el item en estado critico. La levadura tiene 15. */
+  const r = await guardar([
+    { origen: 'Insumo', id: ids['ZTA Levadura'], stockMinimo: 20, stockMaximo: 40 },
+  ]);
+  assert.equal(r.status, 200);
+
+  const { alertas } = await alertasZTA();
+  const levadura = buscar(alertas, 'ZTA Levadura');
+  assert.equal(levadura?.tipo, 'StockCritico');
+  assert.equal(levadura.cantidadSugerida, 25); // hasta el nuevo maximo de 40
+});
+
+test('guarda varios items de una vez, insumos y productos', async () => {
+  const r = await guardar([
+    { origen: 'Insumo', id: ids['ZTA Agua'], stockMinimo: 2, stockMaximo: 30 },
+    { origen: 'Producto', id: ids['ZTA Torta'], stockMinimo: 2, stockMaximo: 15 },
+  ]);
+  assert.equal(r.status, 200);
+  assert.equal((await umbralesDe('ZTA Agua')).stockMaximo, 30);
+  assert.equal((await umbralesDe('ZTA Torta')).stockMaximo, 15);
+
+  // La torta (12) ya no supera el maximo: su sobrestock se apago.
+  const { alertas } = await alertasZTA();
+  assert.equal(buscar(alertas, 'ZTA Torta'), undefined);
+});
+
+test('rechaza un minimo igual al maximo (flujo alternativo 2.a)', async () => {
+  const r = await guardar([
+    { origen: 'Insumo', id: ids['ZTA Sal'], nombre: 'ZTA Sal', stockMinimo: 10, stockMaximo: 10 },
+  ]);
+  assert.equal(r.status, 400);
+  assert.match((await r.json()).error, /ZTA Sal tiene que ser menor que el maximo/);
+});
+
+test('rechaza un minimo mayor que el maximo', async () => {
+  const r = await guardar([
+    { origen: 'Producto', id: ids['ZTA Pan'], stockMinimo: 50, stockMaximo: 20 },
+  ]);
+  assert.equal(r.status, 400);
+});
+
+test('si un item esta mal no se guarda ninguno', async () => {
+  // Postcondicion de fracaso de CU-09: "los umbrales no se guardan".
+  const r = await guardar([
+    { origen: 'Insumo', id: ids['ZTA Agua'], stockMinimo: 1, stockMaximo: 99 },
+    { origen: 'Insumo', id: ids['ZTA Sal'], stockMinimo: 30, stockMaximo: 20 },
+  ]);
+  assert.equal(r.status, 400);
+  assert.equal((await umbralesDe('ZTA Agua')).stockMaximo, 30, 'el agua conserva su umbral anterior');
+});
+
+test('si un item no existe tampoco se guarda el resto', async () => {
+  const r = await guardar([
+    { origen: 'Insumo', id: ids['ZTA Agua'], stockMinimo: 1, stockMaximo: 99 },
+    { origen: 'Insumo', id: 999999999, stockMinimo: 1, stockMaximo: 2 },
+  ]);
+  assert.equal(r.status, 404);
+  assert.equal((await umbralesDe('ZTA Agua')).stockMaximo, 30);
+});
+
+test('rechaza umbrales negativos, vacios o con decimales en productos', async () => {
+  const casos = [
+    { origen: 'Insumo', id: ids['ZTA Sal'], stockMinimo: -1, stockMaximo: 5 },
+    { origen: 'Insumo', id: ids['ZTA Sal'], stockMinimo: '', stockMaximo: 5 },
+    { origen: 'Producto', id: ids['ZTA Pan'], stockMinimo: 2.5, stockMaximo: 10 },
+    { origen: 'Proveedor', id: 1, stockMinimo: 1, stockMaximo: 2 },
+  ];
+  for (const caso of casos) {
+    assert.equal((await guardar([caso])).status, 400, JSON.stringify(caso));
+  }
+});
+
+test('los insumos aceptan umbrales con decimales', async () => {
+  const r = await guardar([
+    { origen: 'Insumo', id: ids['ZTA Sal'], stockMinimo: 10.5, stockMaximo: 20.25 },
+  ]);
+  assert.equal(r.status, 200);
+  assert.equal((await umbralesDe('ZTA Sal')).stockMinimo, 10.5);
+});
+
+test('rechaza una lista vacia o un item repetido', async () => {
+  assert.equal((await guardar([])).status, 400);
+  const item = { origen: 'Insumo', id: ids['ZTA Sal'], stockMinimo: 1, stockMaximo: 2 };
+  assert.equal((await guardar([item, item])).status, 400);
+});
+
+/* ----------------------------------------- CU-10: detalle ampliado */
+
+async function detalle(origen, id) {
+  const r = await pedir(`/api/alertas/${origen}/${id}`, { cookie: cookieEncargado });
+  return { estado: r.status, datos: (await r.json()).detalle };
+}
+
+test('el detalle de un insumo trae el proveedor, los ingresos y las recetas', async () => {
+  const { estado, datos } = await detalle('Insumo', ids['ZTA Harina']);
+  assert.equal(estado, 200);
+  assert.equal(datos.tipo, 'StockCritico');
+  assert.equal(datos.sinStock, true);
+  assert.deepEqual(datos.proveedor, {
+    razonSocial: 'ZTA Molino del Sur', telefono: '341-555-0101', email: null,
+  });
+  assert.deepEqual(datos.ultimosIngresos, []);
+  assert.equal(datos.consumoUltimos30Dias, 0);
+  assert.deepEqual(datos.recetas, []);
+});
+
+test('el detalle de un producto trae su precio, su costo segun receta y lo vendido', async () => {
+  // Receta: 2 kg de harina a $1000 rinden 4 panes -> $500 por pan (RF-06).
+  await consultar('UPDATE materia_prima SET costo_promedio = 1000 WHERE id_materia_prima = $1', [ids['ZTA Harina']]);
+  const { rows } = await consultar(
+    `INSERT INTO receta (nombre, rendimiento_unidades, id_producto)
+     VALUES ('ZTA Receta pan', 4, $1) RETURNING id_receta`,
+    [ids['ZTA Pan']]
+  );
+  await consultar(
+    `INSERT INTO receta_detalle (cantidad_requerida, id_receta, id_materia_prima)
+     VALUES (2, $1, $2)`,
+    [rows[0].id_receta, ids['ZTA Harina']]
+  );
+
+  const { datos } = await detalle('Producto', ids['ZTA Pan']);
+  assert.equal(datos.precioVenta, 1000);
+  assert.equal(datos.costoUnitario, 500);
+  assert.deepEqual(datos.ultimosLotes, []);
+
+  // La harina ahora figura como insumo de esa receta.
+  assert.deepEqual((await detalle('Insumo', ids['ZTA Harina'])).datos.recetas, ['ZTA Receta pan']);
+});
+
+test('un producto sin receta tiene costo desconocido, no cero', async () => {
+  const { datos } = await detalle('Producto', ids['ZTA Medialuna']);
+  assert.equal(datos.costoUnitario, null);
+  assert.equal(datos.vendidoUltimos7Dias, 10); // la venta de la prueba de integracion
+});
+
+test('el detalle de un item sin alerta informa su estado sin sugerencia', async () => {
+  const { datos } = await detalle('Insumo', ids['ZTA Agua']);
+  assert.equal(datos.tipo, null);
+  assert.equal(datos.cantidadSugerida, null);
+});
+
+test('el detalle de un item que no existe da 404', async () => {
+  assert.equal((await detalle('Insumo', 999999999)).estado, 404);
+  assert.equal((await detalle('Proveedor', ids['ZTA Harina'])).estado, 404);
 });
