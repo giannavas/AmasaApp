@@ -18,49 +18,23 @@
    en vez de vaciar la pantalla y hacerla saltar. */
 .panel-control--cargando { opacity: 0.6; transition: opacity 0.2s; }
 
-.panel-control__columnas {
+.panel-control__principal {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
   gap: var(--esp-5);
   align-items: start;
 }
 
-.panel-tarjeta {
-  margin: 0;
+@media (max-width: 50rem) {
+  .panel-control__principal { grid-template-columns: 1fr; }
+}
+
+.panel-control__columnas {
   display: grid;
-  gap: var(--esp-4);
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
-  padding: var(--esp-5);
-  min-width: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: var(--esp-5);
+  align-items: start;
 }
-
-.panel-tarjeta .tabla td,
-.panel-tarjeta .tabla th { padding-left: 0; }
-
-.panel-tarjeta__titulo {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--esp-3);
-  flex-wrap: wrap;
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-texto-suave);
-  margin: 0;
-}
-
-.panel-tarjeta__nota {
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: none;
-}
-
-.panel-tarjeta > .boton { justify-self: start; }
 
 /* La flecha y el signo ya dicen si sube o baja; el color lo refuerza. */
 .indicador .indicador__detalle.panel-variacion--sube { color: var(--color-ok); font-weight: 600; }
@@ -165,31 +139,3 @@
 
 .grafico__tabla .tabla { max-width: 28rem; }
 
-/* ------------------------------------------------------------- alertas */
-
-.panel-alertas__resumen {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--esp-2);
-}
-
-.panel-alertas__lista {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  font-size: var(--tam-sm);
-}
-
-.panel-alertas__lista li {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--esp-3);
-  padding: var(--esp-2) 0;
-  border-bottom: 1px solid var(--color-borde);
-}
-
-.panel-alertas__stock {
-  color: var(--color-error);
-  white-space: nowrap;
-}
