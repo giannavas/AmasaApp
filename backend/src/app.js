@@ -43,7 +43,7 @@ app.use('/api/produccion', rutasProduccion);
 // CU-07 y CU-08: registrar y consultar ventas
 app.use('/api/ventas', rutasVentas);
 
-// CU-09 y CU-10: alertas de stock
+// CU-09 y CU-10: umbrales y alertas de stock
 app.use('/api/alertas', rutasAlertas);
 
 // CU-12: panel de control
