@@ -51,7 +51,8 @@ DO $$
 DECLARE v_total DECIMAL(10,2); v_suma DECIMAL(10,2);
 BEGIN
     SELECT total INTO v_total FROM venta ORDER BY id_venta DESC LIMIT 1;
-    SELECT SUM(subtotal) INTO v_suma FROM detalle_venta;
+    SELECT SUM(subtotal) INTO v_suma FROM detalle_venta
+    WHERE id_venta = (SELECT MAX(id_venta) FROM venta);
     IF v_total <> v_suma THEN
         RAISE EXCEPTION 'FALLO: el total (%) no coincide con la suma de subtotales (%)', v_total, v_suma;
     END IF;
@@ -75,7 +76,8 @@ UPDATE producto SET precio_venta = 500 WHERE nombre = 'Producto V';
 DO $$
 DECLARE v_precio DECIMAL(10,2);
 BEGIN
-    SELECT precio_unitario INTO v_precio FROM detalle_venta LIMIT 1;
+    SELECT precio_unitario INTO v_precio FROM detalle_venta
+    WHERE id_producto = (SELECT id_producto FROM producto WHERE nombre = 'Producto V');
     IF v_precio <> 350 THEN
         RAISE EXCEPTION 'FALLO: el precio historico de la venta cambio a %', v_precio;
     END IF;
@@ -83,12 +85,14 @@ BEGIN
 END $$;
 
 -- 6. Al borrar la venta se borran sus detalles (cascada)
-DELETE FROM venta;
+DELETE FROM venta
+WHERE id_usuario = (SELECT id_usuario FROM usuario WHERE email = 'venta5@test.com');
 
 DO $$
 DECLARE v_cantidad INT;
 BEGIN
-    SELECT COUNT(*) INTO v_cantidad FROM detalle_venta;
+    SELECT COUNT(*) INTO v_cantidad FROM detalle_venta
+    WHERE id_producto = (SELECT id_producto FROM producto WHERE nombre = 'Producto V');
     IF v_cantidad <> 0 THEN
         RAISE EXCEPTION 'FALLO: quedaron detalles huerfanos tras borrar la venta';
     END IF;

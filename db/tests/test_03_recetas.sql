@@ -86,7 +86,8 @@ DELETE FROM receta WHERE nombre = 'Receta Cañoncito';
 DO $$
 DECLARE v_cantidad INT;
 BEGIN
-    SELECT COUNT(*) INTO v_cantidad FROM receta_detalle;
+    SELECT COUNT(*) INTO v_cantidad FROM receta_detalle
+    WHERE id_materia_prima = (SELECT id_materia_prima FROM materia_prima WHERE nombre = 'Harina R');
     IF v_cantidad <> 0 THEN
         RAISE EXCEPTION 'FALLO: quedaron detalles huerfanos tras borrar la receta';
     END IF;

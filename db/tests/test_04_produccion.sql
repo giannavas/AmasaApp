@@ -41,7 +41,8 @@ VALUES (30, 540, 16200,
 DO $$
 DECLARE v_subtotal DECIMAL(10,2);
 BEGIN
-    SELECT SUM(subtotal) INTO v_subtotal FROM consumo_materia_prima;
+    SELECT SUM(subtotal) INTO v_subtotal FROM consumo_materia_prima
+    WHERE id_materia_prima = (SELECT id_materia_prima FROM materia_prima WHERE nombre = 'Harina P');
     IF v_subtotal <> 16200 THEN
         RAISE EXCEPTION 'FALLO: el subtotal del consumo no coincide (%)', v_subtotal;
     END IF;
@@ -87,12 +88,14 @@ BEGIN
 END $$;
 
 -- 6. Al borrar el lote se borran sus consumos (cascada)
-DELETE FROM lote_produccion;
+DELETE FROM lote_produccion
+WHERE id_receta = (SELECT id_receta FROM receta WHERE nombre = 'Receta P');
 
 DO $$
 DECLARE v_cantidad INT;
 BEGIN
-    SELECT COUNT(*) INTO v_cantidad FROM consumo_materia_prima;
+    SELECT COUNT(*) INTO v_cantidad FROM consumo_materia_prima
+    WHERE id_materia_prima = (SELECT id_materia_prima FROM materia_prima WHERE nombre = 'Harina P');
     IF v_cantidad <> 0 THEN
         RAISE EXCEPTION 'FALLO: quedaron consumos huerfanos tras borrar el lote';
     END IF;
