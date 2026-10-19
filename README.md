@@ -172,4 +172,5 @@ herramienta de IA:
 |---|---|
 | `docs/superpowers/specs/` | Decisiones de diseño y su fundamento |
 | `docs/superpowers/plans/` | Planes de implementación paso a paso |
+| `docs/pruebas/` | Informes de las corridas de pruebas y los defectos encontrados |
 | `db/README.md` | Detalle del esquema de base de datos |
