@@ -7,11 +7,12 @@ import { hashearPassword } from '../src/auth/password.js';
 /* Recetas: que insumos y en que cantidad lleva cada producto. Es la
    precondicion de CU-06. Prefijo ZTR para aislar los datos de prueba. */
 
-let servidor, base, cookieEncargado, cookieVenta;
+let servidor, base, cookieEncargado, cookieVenta, cookiePanificador;
 let idProducto, idProductoSinReceta, idHarina, idAzucar;
 
 const ENCARGADO = 'rec.encargado@amasapan.test';
 const VENDEDOR = 'rec.venta@amasapan.test';
+const PANIFICADOR = 'rec.panificador@amasapan.test';
 const CLAVE = 'facturas2026';
 
 async function sembrarUsuario(nombre, email, rol) {
@@ -68,6 +69,7 @@ before(async () => {
   await limpiar();
   await sembrarUsuario('Encargada recetas', ENCARGADO, 'Encargado');
   await sembrarUsuario('Vendedor recetas', VENDEDOR, 'Venta');
+  await sembrarUsuario('Panificador recetas', PANIFICADOR, 'Panificador');
 
   const { rows: prov } = await consultar(
     'INSERT INTO proveedor (razon_social) VALUES ($1) RETURNING id_proveedor',
@@ -104,6 +106,7 @@ before(async () => {
 
   cookieEncargado = await entrar(ENCARGADO);
   cookieVenta = await entrar(VENDEDOR);
+  cookiePanificador = await entrar(PANIFICADOR);
 });
 
 after(async () => {
@@ -121,6 +124,35 @@ test('sin sesion no se pueden ver las recetas', async () => {
 
 test('un usuario de Venta no puede crear recetas', async () => {
   const r = await pedir('', { cookie: cookieVenta, metodo: 'POST', cuerpo: alta() });
+  assert.equal(r.status, 403);
+});
+
+test('el Panificador si puede ver el listado de recetas', async () => {
+  /* CU-06 lo opera el Panificador, y la pantalla de Produccion necesita la
+     lista para que elija que lote producir. Sin esta lectura el desplegable
+     queda vacio y no puede registrar nada. */
+  const r = await pedir('', { cookie: cookiePanificador });
+  assert.equal(r.status, 200);
+  const { recetas } = await r.json();
+  assert.ok(Array.isArray(recetas));
+});
+
+test('el Panificador no puede crear ni editar recetas', async () => {
+  // Leer las recetas con las que produce, si; administrar el catalogo, no.
+  const alNuevo = await pedir('', {
+    cookie: cookiePanificador, metodo: 'POST', cuerpo: alta(),
+  });
+  assert.equal(alNuevo.status, 403);
+
+  const alEditar = await pedir(`/${idProducto}`, {
+    cookie: cookiePanificador, metodo: 'PUT', cuerpo: alta(),
+  });
+  assert.equal(alEditar.status, 403);
+});
+
+test('un usuario de Venta tampoco puede ver las recetas', async () => {
+  // El mostrador no produce: no tiene por que conocer las formulas.
+  const r = await pedir('', { cookie: cookieVenta });
   assert.equal(r.status, 403);
 });
 

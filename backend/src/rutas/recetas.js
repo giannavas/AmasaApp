@@ -4,7 +4,19 @@ import { autenticar, exigirRol } from '../middleware/autenticar.js';
 
 export const rutasRecetas = Router();
 
-rutasRecetas.use(autenticar, exigirRol('Encargado'));
+/* Toda la seccion exige sesion, pero no el mismo rol para todo, igual que en
+   productos. Leer las recetas lo necesita quien produce: CU-06 lo opera el
+   Panificador y su pantalla arma el desplegable con esta lista, asi que
+   cerrarle el GET lo deja sin poder registrar un lote. Administrar el
+   recetario (crear y editar) sigue siendo del Encargado, y por eso el rol se
+   exige en cada ruta que escribe y no a nivel de la seccion entera.
+
+   El Venta queda afuera de las dos: el mostrador no produce. Por eso la
+   lectura lleva el mismo par de roles que /api/produccion y no los tres. */
+rutasRecetas.use(autenticar);
+
+const soloEncargado = exigirRol('Encargado');
+const produceOAdministra = exigirRol('Panificador', 'Encargado');
 
 /* Unicidad violada. Sobre estas tablas puede venir de dos lugares:
    uq_receta_producto, porque un producto tiene una sola receta, y
@@ -134,7 +146,7 @@ function responderError(error, res) {
 /**
  * Listar recetas con sus insumos.
  */
-rutasRecetas.get('/', async (_req, res, siguiente) => {
+rutasRecetas.get('/', produceOAdministra, async (_req, res, siguiente) => {
   try {
     res.json({ recetas: await leerRecetas() });
   } catch (error) {
@@ -148,7 +160,7 @@ rutasRecetas.get('/', async (_req, res, siguiente) => {
  * Cabecera y detalles van en una transaccion: una receta sin insumos no sirve
  * para producir nada, asi que o se guarda entera o no se guarda.
  */
-rutasRecetas.post('/', async (req, res, siguiente) => {
+rutasRecetas.post('/', soloEncargado, async (req, res, siguiente) => {
   try {
     const { nombre, rendimientoUnidades, idProducto, detalles } = req.body ?? {};
 
@@ -189,7 +201,7 @@ rutasRecetas.post('/', async (req, res, siguiente) => {
  * El producto no se cambia: la receta pertenece a un producto desde que se
  * crea, y moverla a otro dejaria al original sin receta de forma silenciosa.
  */
-rutasRecetas.put('/:id', async (req, res, siguiente) => {
+rutasRecetas.put('/:id', soloEncargado, async (req, res, siguiente) => {
   try {
     const id = leerId(req);
     if (id === null) return res.status(404).json({ error: 'La receta no existe' });
