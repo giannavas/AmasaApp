@@ -30,6 +30,7 @@
  *
  * Uso:  npm run sembrar-demo
  */
+import { pathToFileURL } from 'node:url';
 import { pool, consultar, conTransaccion } from '../src/config/db.js';
 
 // ------------------------------------------------------------------
@@ -504,6 +505,13 @@ function planificar(dias, productos, ventasPorDia, lotesPorDia) {
  * por dia que el stock no se vaya abajo de cero en ningun momento, y si eso
  * pasara se agranda la entrega anterior. Es el mismo razonamiento que hace el
  * encargado cuando mira la alerta de stock critico y pide de mas.
+ *
+ * Un insumo puede necesitar comprar cero: si ya arranca con mas stock del que
+ * va a consumir, cualquier entrega sobra. Antes eso pasaba inadvertido y la
+ * cuenta caia al piso del multiplo, inventando entregas minimas que ningun
+ * encargado haria (el azucar recibio doce entregas de un kilo). Ahora esas
+ * entregas se reparten entre los insumos que si necesitan, y al final se
+ * controla que ningun insumo termine fuera de su rango.
  */
 function planificarCompras(dias, insumos, consumoPorDia) {
   const consumoTotal = new Map();
@@ -513,8 +521,8 @@ function planificarCompras(dias, insumos, consumoPorDia) {
     }
   }
 
-  const compras = [];
-
+  // Primera pasada: cuanto necesita comprar cada insumo.
+  const planes = [];
   for (const insumo of insumos) {
     const cuantas = COMPRAS_POR_INSUMO[insumo.nombre];
     if (!cuantas) continue;
@@ -530,8 +538,58 @@ function planificarCompras(dias, insumos, consumoPorDia) {
       insumo.stockMaximo * 0.7
     );
 
-    const aComprar = total + objetivoFinal - insumo.stock;
-    const porEntrega = Math.max(presentacion.multiplo, aComprar / cuantas);
+    planes.push({
+      insumo,
+      presentacion,
+      total,
+      aComprar: total + objetivoFinal - insumo.stock,
+      cuantasPlaneadas: cuantas,
+      cuantas: 0,
+    });
+  }
+
+  /* Las entregas de los insumos que no necesitan comprar no se descartan: se
+     reparten entre los que si, proporcional a lo que les falta, para que el
+     total de compras siga siendo el que pide la presentacion. El reparto es
+     por resto mayor para que la suma cierre exacta. */
+  const sobrados = planes.filter((p) => p.aComprar <= 0);
+  const necesitan = planes.filter((p) => p.aComprar > 0);
+  if (necesitan.length === 0) {
+    throw new Error('Ningun insumo necesita comprar: revisar los stocks iniciales');
+  }
+  for (const p of necesitan) p.cuantas = p.cuantasPlaneadas;
+
+  const aRepartir = sobrados.reduce((a, p) => a + p.cuantasPlaneadas, 0);
+  if (aRepartir > 0) {
+    const faltaTotal = necesitan.reduce((a, p) => a + p.aComprar, 0);
+    const cuotas = necesitan.map((p) => {
+      const exacta = (p.aComprar / faltaTotal) * aRepartir;
+      return { p, entera: Math.floor(exacta), resto: exacta - Math.floor(exacta) };
+    });
+    let dadas = 0;
+    for (const c of cuotas) {
+      c.p.cuantas += c.entera;
+      dadas += c.entera;
+    }
+    cuotas.sort((a, b) => b.resto - a.resto);
+    for (let i = 0; dadas < aRepartir; i += 1, dadas += 1) {
+      cuotas[i % cuotas.length].p.cuantas += 1;
+    }
+
+    for (const p of sobrados) {
+      console.log(
+        `  ${p.insumo.nombre}: arranca con ${dos(p.insumo.stock)} ${p.insumo.unidad} y en los ${DIAS} dias`
+        + ` consume ${dos(p.total)}, asi que no se le compra nada.`
+        + ` Sus ${p.cuantasPlaneadas} entregas se reparten entre los demas.`
+      );
+    }
+  }
+
+  const compras = [];
+
+  for (const plan of necesitan) {
+    const { insumo, presentacion, cuantas } = plan;
+    const porEntrega = Math.max(presentacion.multiplo, plan.aComprar / cuantas);
 
     /* Las entregas se reparten parejo: la primera el primer dia de la ventana
        (el insumo nuevo arranca sin stock y tiene que poder producirse) y la
@@ -568,6 +626,37 @@ function planificarCompras(dias, insumos, consumoPorDia) {
     }
 
     compras.push(...propias);
+  }
+
+  /* Control final: la demo no deberia nacer con alertas, y hasta ahora nadie
+     lo verificaba. Terminar abajo del minimo es culpa del reparto y se corta.
+     Terminar arriba del maximo, en cambio, puede ser stock que ya estaba
+     antes de la ventana: las compras solo suman, no pueden bajarlo, asi que
+     se avisa con el remedio a mano en vez de cortar. */
+  const avisos = [];
+  for (const plan of planes) {
+    const comprado = compras
+      .filter((c) => c.insumo === plan.insumo)
+      .reduce((a, c) => a + c.cantidad, 0);
+    const final = dos(plan.insumo.stock + comprado - plan.total);
+    if (final < plan.insumo.stockMinimo) {
+      throw new Error(
+        `${plan.insumo.nombre} terminaria en ${final} ${plan.insumo.unidad} y su minimo es `
+        + `${plan.insumo.stockMinimo}: el reparto de compras no alcanza`
+      );
+    }
+    if (final > plan.insumo.stockMaximo) {
+      avisos.push(
+        `  ${plan.insumo.nombre} termina en ${final} ${plan.insumo.unidad} con un maximo de `
+        + `${plan.insumo.stockMaximo}. Es stock anterior a la ventana y las compras no lo pueden bajar: `
+        + `la demo va a mostrar Sobrestock hasta que se corrija el maximo desde Insumos (CU-04).`
+      );
+    }
+  }
+  if (avisos.length > 0) {
+    console.log('\nAviso sobre los limites de stock:');
+    for (const aviso of avisos) console.log(aviso);
+    console.log('');
   }
 
   return compras;
@@ -1007,9 +1096,19 @@ async function principal() {
   console.log(todoBien ? '\nLa base coincide con la diapositiva 23.\n' : '\nRevisar: algun total no coincide.\n');
 }
 
-principal()
-  .catch((error) => {
-    console.error('\nNo se sembro nada (la transaccion se revirtio):', error.message);
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+/* La planificacion de compras se exporta para poder probarla sin tocar la
+   base: es la parte con cuentas propias y es donde estuvo el problema del
+   azucar. La siembra en si solo corre cuando se invoca el script directo. */
+export { planificarCompras };
+
+const invocadoDirecto = Boolean(process.argv[1])
+  && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (invocadoDirecto) {
+  principal()
+    .catch((error) => {
+      console.error('\nNo se sembro nada (la transaccion se revirtio):', error.message);
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}
