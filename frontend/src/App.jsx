@@ -20,6 +20,40 @@ import './App.css';
  * espera no muestra el login: si lo hiciera, alguien con la sesion abierta
  * veria el formulario un instante antes de que la pantalla lo reemplace.
  */
+/* Iconos del menu: trazos de 24x24 dibujados con linea, sin relleno, para
+   que tomen el color del texto del boton. */
+const ICONOS = {
+  marca: ['M12 21V8', 'M12 8c0-2.5 1.5-4.5 3.5-5c.3 2.5-1 4.6-3.5 5Z', 'M12 8c0-2.5-1.5-4.5-3.5-5c-.3 2.5 1 4.6 3.5 5Z', 'M12 13c1-2.3 3-3.6 5.3-3.4c-.6 2.4-2.6 3.8-5.3 3.4Z', 'M12 13c-1-2.3-3-3.6-5.3-3.4c.6 2.4 2.6 3.8 5.3 3.4Z'],
+  inicio: ['M3 3h7v9H3z', 'M14 3h7v5h-7z', 'M14 12h7v9h-7z', 'M3 16h7v5H3z'],
+  ventas: ['M6 2h12v20l-3-2-3 2-3-2-3 2z', 'M9 7h6', 'M9 11h6', 'M9 15h4'],
+  produccion: ['M3 5h18v15H3z', 'M3 9h18', 'M7 13h10v4H7z'],
+  alertas: ['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9', 'M10.3 21a1.94 1.94 0 0 0 3.4 0'],
+  insumos: ['M21 8l-9-5-9 5v8l9 5 9-5z', 'M3 8l9 5 9-5', 'M12 13v8'],
+  productos: ['M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z', 'M7.5 7.5h.01'],
+  recetas: ['M4 19.5A2.5 2.5 0 0 1 6.5 17H20', 'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'],
+  proveedores: ['M1 4h14v12H1z', 'M15 8h4l3 3v5h-7z', 'M7.5 18.5a2 2 0 1 1-4 0a2 2 0 0 1 4 0', 'M20.5 18.5a2 2 0 1 1-4 0a2 2 0 0 1 4 0'],
+  usuarios: ['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', 'M9 3a4 4 0 1 1 0 8a4 4 0 0 1 0-8', 'M22 21v-2a4 4 0 0 0-3-3.87', 'M16 3.13a4 4 0 0 1 0 7.75'],
+  salir: ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4', 'M16 17l5-5-5-5', 'M21 12H9'],
+};
+
+const GRUPOS_MENU = [
+  { titulo: 'Día a día', claves: ['inicio', 'ventas', 'produccion', 'alertas'] },
+  { titulo: 'Gestión', claves: ['insumos', 'productos', 'recetas', 'proveedores', 'usuarios'] },
+];
+
+function Icono({ trazos }) {
+  return (
+    <svg className="icono" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {trazos.map((d) => <path key={d} d={d} />)}
+    </svg>
+  );
+}
+
+function iniciales(nombre) {
+  return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
+}
+
 export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [verificando, setVerificando] = useState(true);
@@ -84,7 +118,7 @@ export default function App() {
   const secciones = [
     { clave: 'inicio', texto: 'Inicio' },
     { clave: 'ventas', texto: 'Ventas' },
-    ...(puedeProducir ? [{ clave: 'produccion', texto: 'Produccion' }] : []),
+    ...(puedeProducir ? [{ clave: 'produccion', texto: 'Producción' }] : []),
     ...(esEncargado
       ? [
           { clave: 'alertas', texto: 'Alertas' },
@@ -102,52 +136,68 @@ export default function App() {
 
   return (
     <div className="aplicacion">
-      <header className="barra">
-        <div className="barra__marco">
-          <div className="marca">
+      <aside className="barra">
+        <div className="marca">
+          <span className="marca__logo"><Icono trazos={ICONOS.marca} /></span>
+          <div>
             <h1>AmasaApp</h1>
             <p>Panificadora AmasaPan</p>
           </div>
-
-          <nav className="navegacion" aria-label="Secciones">
-            {secciones.map(({ clave, texto }) => (
-              <button
-                key={clave}
-                className={`navegacion__enlace ${pantalla === clave ? 'navegacion__enlace--activo' : ''}`}
-                onClick={() => setPantalla(clave)}
-                aria-current={pantalla === clave ? 'page' : undefined}
-              >
-                {texto}
-                {clave === 'alertas' && (resumenAlertas?.fallo || resumenAlertas?.total > 0) && (
-                  <span
-                    className={`navegacion__contador ${
-                      resumenAlertas.fallo || resumenAlertas.criticas > 0
-                        ? 'navegacion__contador--error'
-                        : ''
-                    }`}
-                  >
-                    {resumenAlertas.fallo ? '!' : resumenAlertas.total}
-                    <span className="visualmente-oculto">
-                      {resumenAlertas.fallo
-                        ? ' no se pudieron consultar las alertas'
-                        : ' alertas activas'}
-                    </span>
-                  </span>
-                )}
-              </button>
-            ))}
-          </nav>
-
-          <div className="barra__sesion">
-            <span className="barra__usuario">
-              {usuario.nombre} · {usuario.rol}
-            </span>
-            <button className="boton boton--secundario boton--chico" onClick={salir}>
-              Cerrar sesion
-            </button>
-          </div>
         </div>
-      </header>
+
+        {/* El menu se agrupa en lo que se usa todo el dia (atender, hornear,
+            mirar alertas) y la administracion, que se toca de vez en cuando.
+            Los grupos son solo visuales: las secciones son las mismas. */}
+        <nav className="navegacion" aria-label="Secciones">
+          {GRUPOS_MENU.map(({ titulo, claves }) => {
+            const enGrupo = secciones.filter((s) => claves.includes(s.clave));
+            if (enGrupo.length === 0) return null;
+            return (
+              <div key={titulo} className="navegacion__grupo">
+                <p className="navegacion__titulo">{titulo}</p>
+                {enGrupo.map(({ clave, texto }) => (
+                  <button
+                    key={clave}
+                    className={`navegacion__enlace ${pantalla === clave ? 'navegacion__enlace--activo' : ''}`}
+                    onClick={() => setPantalla(clave)}
+                    aria-current={pantalla === clave ? 'page' : undefined}
+                  >
+                    <Icono trazos={ICONOS[clave]} />
+                    <span className="navegacion__texto">{texto}</span>
+                    {clave === 'alertas' && (resumenAlertas?.fallo || resumenAlertas?.total > 0) && (
+                      <span
+                        className={`navegacion__contador ${
+                          resumenAlertas.fallo || resumenAlertas.criticas > 0
+                            ? 'navegacion__contador--error'
+                            : ''
+                        }`}
+                      >
+                        {resumenAlertas.fallo ? '!' : resumenAlertas.total}
+                        <span className="visualmente-oculto">
+                          {resumenAlertas.fallo
+                            ? ' no se pudieron consultar las alertas'
+                            : ' alertas activas'}
+                        </span>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </nav>
+
+        <div className="barra__sesion">
+          <span className="barra__avatar" aria-hidden="true">{iniciales(usuario.nombre)}</span>
+          <div className="barra__usuario">
+            <span className="barra__nombre">{usuario.nombre}</span>
+            <span className="barra__rol">{usuario.rol}</span>
+          </div>
+          <button className="barra__salir" onClick={salir} aria-label="Cerrar sesión" title="Cerrar sesión">
+            <Icono trazos={ICONOS.salir} />
+          </button>
+        </div>
+      </aside>
 
       <main className="contenido">
         {seccionValida === 'alertas' ? (

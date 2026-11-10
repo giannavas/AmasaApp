@@ -50,7 +50,7 @@
 
 .grafico__area {
   position: relative;
-  height: 11rem;
+  height: 14rem;
   padding-top: var(--esp-5);
   border-bottom: 1px solid var(--color-borde);
 }
@@ -69,7 +69,7 @@
   height: 100%;
   display: flex;
   align-items: flex-end;
-  gap: 2px;
+  gap: 4px;
 }
 
 /* La columna ocupa todo el alto aunque la barra sea baja: asi el area para
@@ -88,11 +88,11 @@
   max-width: 2.5rem;
   margin: 0 auto;
   min-height: 0;
-  background: var(--color-primario);
-  border-radius: 4px 4px 0 0;
+  background: #C98A63;
+  border-radius: 6px 6px 2px 2px;
 }
 
-.grafico__columna:hover .grafico__barra { background: var(--color-primario-hover); }
+.grafico__columna:hover .grafico__barra { background: var(--color-primario); }
 
 .grafico__columna:hover::after {
   content: attr(data-rotulo);
@@ -106,7 +106,7 @@
   border-radius: var(--radio-sm);
   background: var(--color-texto);
   color: var(--color-superficie);
-  font-family: var(--fuente-datos);
+  font-variant-numeric: tabular-nums;
   font-size: var(--tam-xs);
   box-shadow: var(--sombra);
   pointer-events: none;
@@ -123,12 +123,15 @@
   display: flex;
   justify-content: space-between;
   margin-top: var(--esp-1);
-  font-family: var(--fuente-datos);
+  font-variant-numeric: tabular-nums;
   font-size: var(--tam-xs);
   color: var(--color-texto-suave);
 }
 
 .grafico__tabla summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--alto-control);
   cursor: pointer;
   font-size: var(--tam-sm);
   color: var(--color-primario);

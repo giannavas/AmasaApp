@@ -1,49 +1,58 @@
 /* ============================================================
    AmasaApp - Sistema de diseño
-   Paleta "Panadería clásica". Todos los pares de color cumplen
+   Paleta "Harina y corteza": fondo color harina, acciones en el
+   tono de la corteza del pan. Todos los pares de texto cumplen
    WCAG AA (contraste minimo 4.5:1). No agregar colores sueltos
    en los componentes: si falta un tono, se agrega aca.
    ============================================================ */
 
 :root {
   /* ---------- Superficies ---------- */
-  --color-fondo:       #FBF7F0;  /* fondo de la aplicacion */
+  --color-fondo:       #F6F1EA;  /* fondo de la aplicacion */
+  --color-fondo-suave: #FBF8F4;  /* bloques dentro de una tarjeta */
   --color-superficie:  #FFFFFF;  /* tarjetas, tablas, formularios */
-  --color-borde:       #EAE1D5;  /* bordes y separadores */
+  --color-borde:       #EAE2D7;  /* bordes y separadores */
+  --color-borde-campo: #DCD2C6;  /* contorno de los campos */
 
   /* ---------- Texto ---------- */
-  --color-texto:       #40352C;  /* 11.91:1 sobre superficie */
-  --color-texto-suave: #7C6E61;  /*  4.62:1 sobre fondo */
+  --color-texto:       #231C17;  /* 16.4:1 sobre superficie */
+  --color-texto-medio: #3D332C;  /* menu y botones neutros */
+  --color-texto-suave: #6E6258;  /*  5.2:1 sobre fondo */
 
   /* ---------- Accion ---------- */
-  --color-primario:      #986A39; /* 4.71:1 - botones, enlaces */
-  --color-primario-hover:#815A30;
-  --color-acento:        #D6A85C; /* decorativo: no usar para texto */
+  --color-primario:       #9C4221; /* 6.5:1 - botones, enlaces */
+  --color-primario-hover: #7A3318;
+  --color-primario-fondo: #F5E6DC; /* seccion activa del menu */
+  --color-primario-texto: #7A3318; /* texto sobre primario-fondo */
+  --color-acento:         #E8B65A; /* decorativo y foco: no usar para texto */
+  --color-oscuro:         #231C17; /* boton neutro fuerte */
 
   /* ---------- Estados de stock (RF-04) ----------
      Cada estado tiene un tono para texto y otro para fondo de
      etiqueta. El primero solo sobre el segundo, nunca al reves. */
-  --color-ok:          #507349;
-  --color-ok-fondo:    #E8EFE6;
-  --color-aviso:       #86651A;  /* sobrestock */
-  --color-aviso-fondo: #F6EEDA;
-  --color-error:       #AF423B;  /* stock critico */
-  --color-error-fondo: #FAE9E7;
+  --color-ok:          #2F5A2B;
+  --color-ok-fondo:    #E3EFE0;
+  --color-aviso:       #6E4A10;  /* sobrestock */
+  --color-aviso-fondo: #FBF0D9;
+  --color-error:       #8E1F18;  /* stock critico */
+  --color-error-fondo: #FCE8E6;
+  --color-error-fuerte:#B3261E;  /* contador del menu, texto blanco encima */
 
   /* ---------- Tipografia ----------
-     Fraunces para titulos, Work Sans para texto corrido y
-     JetBrains Mono para numeros que se comparan en columna. */
-  --fuente-titulo: "Fraunces", Georgia, "Times New Roman", serif;
-  --fuente-texto:  "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --fuente-datos:  "JetBrains Mono", ui-monospace, Consolas, monospace;
+     Bricolage Grotesque para titulos y numeros grandes, Inter para
+     todo lo demas. Los numeros que se comparan en columna usan cifras
+     de ancho fijo (tabular-nums) en la misma Inter. */
+  --fuente-titulo: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  --fuente-texto:  "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fuente-datos:  "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* ---------- Escala tipografica ---------- */
-  --tam-xs:   0.75rem;
+  --tam-xs:   0.8125rem;
   --tam-sm:   0.875rem;
   --tam-base: 1rem;
-  --tam-lg:   1.125rem;
+  --tam-lg:   1.1875rem;
   --tam-xl:   1.375rem;
-  --tam-2xl:  1.75rem;
+  --tam-2xl:  1.875rem;
   --tam-3xl:  2.25rem;
 
   /* ---------- Espaciado ---------- */
@@ -56,12 +65,17 @@
   --esp-7: 3rem;
 
   /* ---------- Formas ---------- */
-  --radio-sm: 6px;
-  --radio-md: 10px;
+  --radio-sm: 10px;
+  --radio-md: 14px;
+  --radio-lg: 20px;
   --radio-pill: 999px;
 
-  /* Una sola sombra, suave y teñida del color del texto.
-     Se reserva para elementos que flotan: modales, menus. */
-  --sombra: 0 1px 2px rgba(64, 53, 44, 0.05),
-            0 4px 12px rgba(64, 53, 44, 0.06);
+  /* Alto minimo de todo lo que se toca: botones, campos, menu. 44 px es
+     lo que pide WCAG para usar con el dedo en una pantalla tactil. */
+  --alto-control: 2.75rem;
+  --alto-campo:   3rem;
+
+  /* Sombra suave teñida del color del texto. Se reserva para lo que
+     flota o se destaca: el ticket, el formulario abierto. */
+  --sombra: 0 12px 30px -18px rgba(60, 40, 20, 0.35);
 }

@@ -15,35 +15,39 @@ body {
   color: var(--color-texto);
   font-family: var(--fuente-texto);
   font-size: var(--tam-base);
-  line-height: 1.6;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
   font-family: var(--fuente-titulo);
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 700;
+  line-height: 1.15;
   margin: 0;
   text-wrap: balance;
 }
 
-h1 { font-size: var(--tam-3xl); letter-spacing: -0.01em; }
-h2 { font-size: var(--tam-xl); }
+h1 { font-size: var(--tam-3xl); letter-spacing: -0.02em; }
+h2 { font-size: var(--tam-xl); letter-spacing: -0.01em; }
 h3 { font-size: var(--tam-lg); }
 
 p { margin: 0; }
 
-/* Los numeros que se comparan en columna van en monoespaciada y
-   con ancho fijo de digito, para que las unidades se alineen. */
+a { color: var(--color-primario); }
+a:hover { color: var(--color-primario-hover); }
+
+/* Los numeros que se comparan en columna llevan cifras de ancho fijo,
+   para que las unidades se alineen. */
 .dato {
   font-family: var(--fuente-datos);
   font-variant-numeric: tabular-nums;
 }
 
 /* El foco del teclado tiene que verse siempre: hay usuarios que
-   operan el sistema sin mouse. */
+   operan el sistema sin mouse. El dorado se ve sobre el fondo claro
+   y tambien sobre los botones color corteza. */
 :focus-visible {
-  outline: 2px solid var(--color-primario);
+  outline: 3px solid var(--color-acento);
   outline-offset: 2px;
   border-radius: var(--radio-sm);
 }
@@ -61,16 +65,23 @@ button { font: inherit; cursor: pointer; }
    porque las usan todas: si quedaran en Login.css, cualquier pantalla que
    se cargue sin el login se quedaria sin botones. */
 .boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  min-height: var(--alto-control);
   font-family: var(--fuente-texto);
   font-size: var(--tam-base);
   font-weight: 600;
-  padding: var(--esp-2) var(--esp-4);
-  border: 1px solid transparent;
-  border-radius: var(--radio-sm);
+  line-height: 1.2;
+  padding: var(--esp-2) var(--esp-5);
+  border: 1.5px solid transparent;
+  border-radius: var(--radio-md);
   cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
 }
-.boton:focus-visible { outline: 2px solid var(--color-primario); outline-offset: 2px; }
-.boton:disabled { opacity: 0.6; cursor: default; }
+.boton:focus-visible { outline: 3px solid var(--color-acento); outline-offset: 2px; }
+.boton:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .boton--primario { background: var(--color-primario); color: #fff; }
 .boton--primario:hover:not(:disabled) { background: var(--color-primario-hover); }
@@ -81,37 +92,56 @@ button { font: inherit; cursor: pointer; }
    indistinguible de un texto suelto. */
 .boton--secundario {
   background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
+  border: 1.5px solid var(--color-borde-campo);
   color: var(--color-texto);
 }
-.boton--secundario:hover:not(:disabled) { background: var(--color-fondo); }
+.boton--secundario:hover:not(:disabled) {
+  background: var(--color-fondo-suave);
+  border-color: var(--color-primario);
+}
 
 /* Campos de formulario. Tambien compartidos por todas las pantallas. */
-.campo { display: grid; gap: var(--esp-1); }
+.campo { display: grid; gap: var(--esp-2); align-content: start; }
 
 .campo label {
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--color-texto-suave);
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-sm);
+  font-weight: 600;
+  color: var(--color-texto);
 }
 
 .campo input,
-.campo select {
+.campo select,
+.campo textarea {
+  min-height: var(--alto-campo);
   font-family: var(--fuente-texto);
   font-size: var(--tam-base);
   color: var(--color-texto);
-  background: var(--color-fondo);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-sm);
-  padding: var(--esp-2) var(--esp-3);
+  background: var(--color-superficie);
+  border: 1.5px solid var(--color-borde-campo);
+  border-radius: var(--radio-md);
+  padding: var(--esp-2) var(--esp-4);
+  width: 100%;
+  transition: border-color 0.15s;
 }
 
+.campo input:hover,
+.campo select:hover { border-color: #C9BBAA; }
+
 .campo input:focus-visible,
-.campo select:focus-visible {
-  outline: 2px solid var(--color-primario);
+.campo select:focus-visible,
+.campo textarea:focus-visible {
+  outline: 3px solid var(--color-acento);
   outline-offset: 1px;
+  border-color: var(--color-primario);
+}
+
+.campo input[type="checkbox"],
+.campo input[type="radio"] {
+  min-height: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-primario);
 }
 
 .campo__pista {
@@ -143,7 +173,7 @@ button { font: inherit; cursor: pointer; }
 
 .seccion__encabezado {
   display: flex;
-  align-items: start;
+  align-items: end;
   justify-content: space-between;
   gap: var(--esp-4);
   flex-wrap: wrap;
@@ -151,25 +181,25 @@ button { font: inherit; cursor: pointer; }
 
 .seccion__ayuda {
   color: var(--color-texto-suave);
-  font-size: var(--tam-sm);
+  font-size: var(--tam-base);
   margin-top: var(--esp-1);
-  max-width: 34rem;
+  max-width: 38rem;
 }
 
 .mensaje-error {
   color: var(--color-error);
   background: var(--color-error-fondo);
-  border: 1px solid var(--color-error);
-  border-radius: var(--radio-sm);
-  padding: var(--esp-2) var(--esp-3);
+  border: 0;
+  border-radius: var(--radio-md);
+  padding: var(--esp-3) var(--esp-4);
   font-size: var(--tam-sm);
   font-weight: 600;
 }
 
 .mensaje-vacio {
   color: var(--color-texto-suave);
-  font-size: var(--tam-sm);
-  padding: var(--esp-5);
+  font-size: var(--tam-base);
+  padding: var(--esp-6) var(--esp-5);
   text-align: center;
 }
 
@@ -177,24 +207,28 @@ button { font: inherit; cursor: pointer; }
 
 .formulario-panel {
   display: grid;
-  gap: var(--esp-4);
+  gap: var(--esp-5);
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
-  padding: var(--esp-5);
+  border-radius: var(--radio-lg);
+  padding: var(--esp-5) var(--esp-5) var(--esp-6);
+  box-shadow: var(--sombra);
 }
+
+.formulario-panel > h3,
+.formulario-panel > h2 { font-size: var(--tam-xl); }
 
 /* Los campos se acomodan en columnas segun el ancho disponible. Un formulario
    de una sola columna obliga a scrollear de mas cuando tiene muchos campos. */
 .formulario-panel__campos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
   gap: var(--esp-4);
 }
 
 .formulario-panel__acciones {
   display: flex;
-  gap: var(--esp-2);
+  gap: var(--esp-3);
   flex-wrap: wrap;
 }
 
@@ -206,21 +240,20 @@ button { font: inherit; cursor: pointer; }
   overflow-x: auto;
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
+  border-radius: var(--radio-lg);
+  padding: var(--esp-1) var(--esp-2);
 }
 
 .tabla {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--tam-sm);
+  font-size: var(--tam-base);
 }
 
 .tabla th {
   text-align: left;
-  font-family: var(--fuente-datos);
+  font-family: var(--fuente-texto);
   font-size: var(--tam-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--color-texto-suave);
   font-weight: 600;
   padding: var(--esp-3) var(--esp-4);
@@ -230,14 +263,16 @@ button { font: inherit; cursor: pointer; }
 
 .tabla td {
   padding: var(--esp-3) var(--esp-4);
-  border-bottom: 1px solid var(--color-borde);
+  border-bottom: 1px solid #F0E9E0;
   vertical-align: middle;
 }
 
+.tabla tbody tr { transition: background-color 0.12s; }
+.tabla tbody tr:hover { background: var(--color-fondo-suave); }
 .tabla tr:last-child td { border-bottom: none; }
 
-/* Los numeros se alinean a la derecha y en monoespaciada de ancho fijo, para
-   poder comparar las magnitudes de un vistazo leyendo la columna. */
+/* Los numeros se alinean a la derecha y con cifras de ancho fijo, para poder
+   comparar las magnitudes de un vistazo leyendo la columna. */
 .tabla .numero {
   text-align: right;
   font-family: var(--fuente-datos);
@@ -253,8 +288,10 @@ button { font: inherit; cursor: pointer; }
 }
 
 .boton--chico {
-  font-size: var(--tam-xs);
-  padding: var(--esp-1) var(--esp-3);
+  min-height: var(--alto-control);
+  font-size: var(--tam-sm);
+  padding: var(--esp-1) var(--esp-4);
+  border-radius: var(--radio-sm);
 }
 
 /* ------------------------------------------------------ etiquetas de estado */
@@ -264,10 +301,10 @@ button { font: inherit; cursor: pointer; }
    quedaria vacia. */
 .etiqueta {
   display: inline-block;
-  font-family: var(--fuente-datos);
+  font-family: var(--fuente-texto);
   font-size: var(--tam-xs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  line-height: 1.4;
   padding: var(--esp-1) var(--esp-3);
   border-radius: var(--radio-pill);
   white-space: nowrap;
@@ -280,17 +317,15 @@ button { font: inherit; cursor: pointer; }
 .etiqueta--neutro {
   color: var(--color-texto-suave);
   background: var(--color-fondo);
-  border: 1px solid var(--color-borde);
+  border: 0;
 }
 
 /* ---------------------------------- listas dentro de un formulario -------- */
 
 .subtitulo-campo {
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--color-texto-suave);
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-sm);
+  color: var(--color-texto);
   font-weight: 600;
   margin: 0 0 var(--esp-3);
 }
@@ -304,6 +339,9 @@ button { font: inherit; cursor: pointer; }
   grid-template-columns: 2fr 1fr auto;
   gap: var(--esp-3);
   align-items: end;
+  padding: var(--esp-3);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo-suave);
 }
 
 @media (max-width: 34rem) {
@@ -314,21 +352,24 @@ button { font: inherit; cursor: pointer; }
 .lista-consumo {
   list-style: none;
   margin: 0;
-  padding: 0;
   display: grid;
-  gap: var(--esp-2);
-  background: var(--color-fondo);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-sm);
-  padding: var(--esp-3) var(--esp-4);
-  font-size: var(--tam-sm);
+  gap: 0;
+  background: var(--color-fondo-suave);
+  border: 0;
+  border-radius: var(--radio-md);
+  padding: var(--esp-2) var(--esp-4);
+  font-size: var(--tam-base);
 }
 
 .lista-consumo li {
   display: flex;
   justify-content: space-between;
   gap: var(--esp-4);
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--color-borde);
 }
+
+.lista-consumo li:last-child { border-bottom: 0; }
 
 /* ------------------------------------------------- ventas (CU-07 y CU-08) */
 
@@ -349,22 +390,28 @@ button { font: inherit; cursor: pointer; }
   font-weight: 600;
 }
 
-/* Total de la venta que se esta cargando. */
+/* Total de la venta que se esta cargando: grande, para leerlo de lejos
+   mientras se atiende. */
 .total-venta {
   margin: 0;
-  padding-top: var(--esp-3);
-  border-top: 1px solid var(--color-borde);
+  padding: var(--esp-4) var(--esp-5);
+  border: 0;
+  border-radius: var(--radio-md);
+  background: var(--color-fondo-suave);
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: var(--esp-4);
-  color: var(--color-texto-suave);
-  font-size: var(--tam-sm);
+  color: var(--color-texto);
+  font-size: var(--tam-base);
+  font-weight: 600;
 }
 
 .total-venta strong {
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xl);
+  font-family: var(--fuente-titulo);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--tam-3xl);
+  font-weight: 800;
   color: var(--color-texto);
 }
 
@@ -378,7 +425,7 @@ button { font: inherit; cursor: pointer; }
   padding: var(--esp-4);
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
+  border-radius: var(--radio-lg);
 }
 
 .filtros .campo { margin: 0; }
@@ -402,6 +449,7 @@ button { font: inherit; cursor: pointer; }
   margin-left: var(--esp-2);
   color: var(--color-texto-suave);
   font-family: var(--fuente-datos);
+  font-variant-numeric: tabular-nums;
   font-size: var(--tam-xs);
 }
 
@@ -411,53 +459,60 @@ button { font: inherit; cursor: pointer; }
    y el panel de control, por eso viven aca y no en la hoja de una pantalla. */
 .indicadores {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--esp-3);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--esp-4);
   margin: 0;
 }
 
 .indicador {
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
-  padding: var(--esp-4);
+  border-radius: var(--radio-lg);
+  padding: var(--esp-5);
   display: grid;
-  gap: var(--esp-1);
+  gap: var(--esp-2);
   align-content: start;
 }
 
 .indicador dt {
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-sm);
+  font-weight: 600;
   color: var(--color-texto-suave);
 }
 
 .indicador dd {
   margin: 0;
+  font-family: var(--fuente-titulo);
+  font-variant-numeric: tabular-nums;
   font-size: var(--tam-2xl);
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 .indicador .indicador__detalle {
-  font-size: var(--tam-xs);
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-sm);
   font-weight: 400;
   color: var(--color-texto-suave);
 }
 
-/* El color va en el borde izquierdo y en el numero, nunca solo: el rotulo
-   ya dice de que se trata. */
-.indicador--error { border-left: 4px solid var(--color-error); }
-.indicador--error dd:not(.indicador__detalle) { color: var(--color-error); }
-.indicador--aviso { border-left: 4px solid var(--color-aviso); }
-.indicador--aviso dd:not(.indicador__detalle) { color: var(--color-aviso); }
+/* El estado se marca con el fondo de toda la tarjeta y el color del numero,
+   nunca solo con el color: el rotulo ya dice de que se trata. */
+.indicador--error { background: var(--color-error-fondo); border-color: #F2C9C4; }
+.indicador--error dt,
+.indicador--error dd,
+.indicador--error .indicador__detalle { color: var(--color-error); }
+.indicador--aviso { background: var(--color-aviso-fondo); border-color: #EBDDBE; }
+.indicador--aviso dt,
+.indicador--aviso dd,
+.indicador--aviso .indicador__detalle { color: var(--color-aviso); }
 
 /* Dato complementario debajo del principal, dentro de una misma celda. */
 .tabla__secundario {
   display: block;
   font-family: var(--fuente-datos);
+  font-variant-numeric: tabular-nums;
   font-size: var(--tam-xs);
   color: var(--color-texto-suave);
 }
@@ -467,15 +522,15 @@ button { font: inherit; cursor: pointer; }
 
 /* ----------------------------------------- tarjetas de contenido (CU-10/12) */
 
-/* Recuadro con titulo chico en mayusculas. Lo usan el panel de control y la
-   pantalla de alertas. */
+/* Recuadro con su titulo. Lo usan el panel de control y la pantalla de
+   alertas. */
 .panel-tarjeta {
   margin: 0;
   display: grid;
   gap: var(--esp-4);
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
+  border-radius: var(--radio-lg);
   padding: var(--esp-5);
   min-width: 0;
 }
@@ -495,19 +550,20 @@ button { font: inherit; cursor: pointer; }
   align-items: baseline;
   gap: var(--esp-3);
   flex-wrap: wrap;
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-texto-suave);
+  font-family: var(--fuente-titulo);
+  font-size: var(--tam-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-texto);
   margin: 0;
 }
 
 .panel-tarjeta__nota {
+  font-family: var(--fuente-texto);
+  font-size: var(--tam-sm);
   font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-texto-suave);
 }
 
 .panel-tarjeta > .boton { justify-self: start; }
@@ -517,9 +573,9 @@ button { font: inherit; cursor: pointer; }
 .mensaje-exito {
   color: var(--color-ok);
   background: var(--color-ok-fondo);
-  border: 1px solid var(--color-ok);
-  border-radius: var(--radio-sm);
-  padding: var(--esp-2) var(--esp-3);
+  border: 0;
+  border-radius: var(--radio-md);
+  padding: var(--esp-3) var(--esp-4);
   font-size: var(--tam-sm);
   font-weight: 600;
 }

@@ -1,31 +1,91 @@
+/* Ingreso en dos mitades: la portada color corteza con el nombre del
+   negocio, y el formulario. En pantallas angostas la portada queda arriba
+   y se achica. */
 .login {
   min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.login__portada {
+  flex: 1 1 30rem;
+  background: var(--color-primario);
+  color: #FFF8EE;
+  padding: var(--esp-7) 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--esp-7);
+}
+
+.login__marca {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+}
+
+.login__logo {
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 16px;
+  background: #FFF8EE;
+  color: var(--color-primario);
   display: grid;
   place-items: center;
-  padding: var(--esp-6) var(--esp-4);
+}
+
+.login__marca h1 { font-size: 1.625rem; font-weight: 800; }
+.login__marca p { font-size: var(--tam-sm); opacity: 0.85; }
+
+.login__lema { max-width: 32rem; display: grid; gap: var(--esp-4); }
+
+.login__lema p { font-size: var(--tam-lg); line-height: 1.55; color: #F6E6D3; }
+
+.login__lema .login__titular {
+  font-family: var(--fuente-titulo);
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #FFF8EE;
+  text-wrap: balance;
 }
 
 .login__tarjeta {
+  flex: 1 1 28rem;
+  align-self: center;
   width: 100%;
-  max-width: 24rem;
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
-  padding: var(--esp-6) var(--esp-5) var(--esp-5);
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: var(--esp-7) var(--esp-5);
   display: grid;
-  gap: var(--esp-4);
+  gap: var(--esp-5);
 }
 
-.login__marca { text-align: center; margin-bottom: var(--esp-2); }
-.login__marca h1 { font-size: var(--tam-2xl); }
-.login__marca p { color: var(--color-texto-suave); font-size: var(--tam-sm); }
+.login__saludo h2 { font-size: var(--tam-3xl); margin-bottom: var(--esp-2); }
+.login__saludo p { color: var(--color-texto-suave); }
+
+.login__tarjeta .boton { min-height: 3.5rem; font-size: var(--tam-lg); }
 
 /* El espacio del error se reserva siempre, aunque este vacio: asi el
    formulario no salta hacia abajo cuando aparece el mensaje. */
 .login__error {
   min-height: 1.4rem;
+  margin: 0;
   color: var(--color-error);
   font-size: var(--tam-sm);
   font-weight: 600;
-  margin: 0;
+}
+
+.login__error:not(:empty) {
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: var(--radio-md);
+  background: var(--color-error-fondo);
+}
+
+@media (max-width: 40rem) {
+  .login__portada { padding: var(--esp-5); gap: var(--esp-5); }
+  .login__lema p:not(.login__titular) { display: none; }
+  .login__lema .login__titular { font-size: 1.75rem; }
 }

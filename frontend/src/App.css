@@ -5,87 +5,218 @@
   color: var(--color-texto-suave);
 }
 
-.aplicacion { min-height: 100vh; }
+/* Menu lateral a la izquierda y contenido a la derecha. En pantallas
+   angostas el menu pasa arriba (ver el final de la hoja). */
+.aplicacion {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
 
-/* ---------------------------------------------------------- barra superior */
+/* ------------------------------------------------------------ menu lateral */
 
 .barra {
+  flex: 0 0 15.5rem;
   background: var(--color-superficie);
-  border-bottom: 1px solid var(--color-borde);
+  border-right: 1px solid var(--color-borde);
+  padding: var(--esp-5) var(--esp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
-.barra__marco {
-  max-width: 64rem;
-  margin: 0 auto;
-  padding: var(--esp-3) var(--esp-4);
+.marca {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--esp-4);
-  flex-wrap: wrap;
+  gap: var(--esp-3);
+  padding: 0 var(--esp-2);
 }
 
-.marca h1 { font-size: var(--tam-xl); margin-bottom: 0; }
+.marca__logo {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: var(--color-primario);
+  color: #FFF8EE;
+  display: grid;
+  place-items: center;
+}
+
+.marca__logo .icono { width: 22px; height: 22px; }
+
+.marca h1 {
+  font-size: 1.1875rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
 .marca p { color: var(--color-texto-suave); font-size: var(--tam-xs); }
 
-.navegacion { display: flex; flex-wrap: wrap; gap: var(--esp-1); }
+.navegacion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-5);
+}
+
+.navegacion__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navegacion__titulo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-texto-suave);
+  padding: 0 var(--esp-3) var(--esp-1);
+}
 
 /* Son botones y no enlaces porque todavia no hay rutas: cambian el estado de
    la aplicacion, no la direccion. Cuando haya rutas pasan a ser enlaces. */
 .navegacion__enlace {
-  background: none;
-  border: 1px solid transparent;
-  border-radius: var(--radio-sm);
-  font-family: var(--fuente-texto);
-  font-size: var(--tam-sm);
-  font-weight: 600;
-  color: var(--color-texto-suave);
-  padding: var(--esp-2) var(--esp-3);
-}
-
-.navegacion__enlace:hover { color: var(--color-texto); background: var(--color-fondo); }
-
-.navegacion__enlace--activo {
-  color: var(--color-primario);
-  background: var(--color-fondo);
-  border-color: var(--color-borde);
-}
-
-.barra__sesion {
   display: flex;
   align-items: center;
   gap: var(--esp-3);
-  flex-wrap: wrap;
+  width: 100%;
+  min-height: var(--alto-control);
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  font-family: var(--fuente-texto);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-texto-medio);
+  padding: 0 var(--esp-3);
+  text-align: left;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.navegacion__enlace .icono { flex: none; }
+.navegacion__texto { flex: 1; }
+
+.navegacion__enlace:hover { color: var(--color-texto); background: var(--color-fondo); }
+
+.navegacion__enlace--activo,
+.navegacion__enlace--activo:hover {
+  color: var(--color-primario-texto);
+  background: var(--color-primario-fondo);
+  font-weight: 600;
+}
+
+/* Contador de alertas junto al enlace de la seccion (CU-10). Rojo si hay
+   alguna critica; si solo hay sobrestock, en el tono de aviso. */
+.navegacion__contador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 var(--esp-2);
+  border-radius: var(--radio-pill);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--tam-xs);
+  font-weight: 700;
+  color: var(--color-aviso);
+  background: var(--color-aviso-fondo);
+}
+
+.navegacion__contador--error {
+  color: #FFFFFF;
+  background: var(--color-error-fuerte);
+}
+
+/* Usuario de la sesion al pie del menu, con el boton para salir. */
+.barra__sesion {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo);
+}
+
+.barra__avatar {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radio-pill);
+  background: var(--color-acento);
+  color: var(--color-texto);
+  font-weight: 700;
+  font-size: var(--tam-sm);
+  display: grid;
+  place-items: center;
 }
 
 .barra__usuario {
-  font-size: var(--tam-sm);
-  color: var(--color-texto-suave);
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
 }
+
+.barra__nombre {
+  font-size: var(--tam-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barra__rol { font-size: var(--tam-xs); color: var(--color-texto-suave); }
+
+.barra__salir {
+  flex: none;
+  width: var(--alto-control);
+  height: var(--alto-control);
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-texto-suave);
+  display: grid;
+  place-items: center;
+}
+
+.barra__salir:hover { background: var(--color-superficie); color: var(--color-primario); }
 
 /* ---------------------------------------------------------------- contenido */
 
 .contenido {
-  max-width: 64rem;
-  margin: 0 auto;
-  padding: var(--esp-6) var(--esp-4);
+  flex: 1 1 0;
+  min-width: 0;
+  padding: var(--esp-6) var(--esp-6) var(--esp-7);
+}
+
+/* Las pantallas usan todo el ancho disponible, hasta un tope que mantiene
+   las lineas legibles en monitores grandes. */
+.contenido > * {
+  max-width: 76rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .panel {
   background: var(--color-superficie);
   border: 1px solid var(--color-borde);
-  border-radius: var(--radio-md);
-  padding: var(--esp-5);
-  max-width: 26rem;
+  border-radius: var(--radio-lg);
+  padding: var(--esp-6);
+  max-width: 32rem;
 }
 
 .panel__titulo {
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-texto-suave);
-  margin-bottom: var(--esp-4);
+  font-family: var(--fuente-titulo);
+  font-size: var(--tam-2xl);
+  color: var(--color-texto);
+  margin-bottom: var(--esp-5);
 }
 
 /* Pares rotulo-valor en dos columnas: el rotulo fija su ancho al contenido
@@ -93,45 +224,63 @@
 .datos-usuario {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--esp-2) var(--esp-4);
+  gap: var(--esp-3) var(--esp-5);
   margin: 0;
 }
 
 .datos-usuario dt {
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--tam-sm);
+  font-weight: 600;
   color: var(--color-texto-suave);
   align-self: center;
 }
 
 .datos-usuario dd { margin: 0; font-weight: 500; }
 
+/* Accesos grandes: en el mostrador se tocan con el dedo. */
 .accesos {
-  margin-top: var(--esp-5);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--esp-2);
+  margin-top: var(--esp-6);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--esp-3);
 }
 
-/* Contador de alertas junto al enlace de la seccion (CU-10). Rojo si hay
-   alguna critica; si solo hay sobrestock, en el tono de aviso. */
-.navegacion__contador {
-  display: inline-block;
-  margin-left: var(--esp-2);
-  min-width: 1.5em;
-  padding: 0 var(--esp-2);
-  border-radius: var(--radio-pill);
-  font-family: var(--fuente-datos);
-  font-size: var(--tam-xs);
-  line-height: 1.5;
-  text-align: center;
-  color: var(--color-aviso);
-  background: var(--color-aviso-fondo);
-}
+.accesos .boton { min-height: 3.5rem; font-size: var(--tam-lg); }
 
-.navegacion__contador--error {
-  color: var(--color-error);
-  background: var(--color-error-fondo);
+/* ------------------------------------------------------- pantallas angostas */
+
+/* En una tablet vertical o un telefono el menu pasa arriba: la marca y el
+   usuario en una fila, y las secciones en una tira que se desplaza de
+   costado sin empujar el contenido hacia abajo. */
+@media (max-width: 56rem) {
+  .aplicacion { flex-direction: column; }
+
+  .barra {
+    position: static;
+    height: auto;
+    flex: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-borde);
+    padding: var(--esp-3) var(--esp-4);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--esp-3);
+  }
+
+  .barra__sesion { margin-top: 0; padding: 0; background: none; }
+  .barra__usuario { display: none; }
+
+  .navegacion {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    gap: var(--esp-1);
+    overflow-x: auto;
+    padding-bottom: var(--esp-1);
+  }
+
+  .navegacion__grupo { flex-direction: row; gap: var(--esp-1); }
+  .navegacion__titulo { display: none; }
+  .navegacion__enlace { width: auto; white-space: nowrap; }
+
+  .contenido { padding: var(--esp-5) var(--esp-4) var(--esp-6); }
 }

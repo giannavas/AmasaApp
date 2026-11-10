@@ -29,18 +29,19 @@
 }
 
 .umbral__campo {
-  width: 5.5rem;
+  width: 6.5rem;
+  min-height: var(--alto-control);
   font: inherit;
-  font-family: var(--fuente-datos);
+  font-variant-numeric: tabular-nums;
   text-align: right;
-  padding: var(--esp-1) var(--esp-2);
-  border: 1px solid var(--color-borde);
+  padding: var(--esp-1) var(--esp-3);
+  border: 1.5px solid var(--color-borde-campo);
   border-radius: var(--radio-sm);
-  background: var(--color-fondo);
+  background: var(--color-superficie);
   color: var(--color-texto);
 }
 
-.umbral__campo:focus-visible { outline: 2px solid var(--color-primario); outline-offset: 1px; }
+.umbral__campo:focus-visible { outline: 3px solid var(--color-acento); outline-offset: 1px; border-color: var(--color-primario); }
 
 .umbral__campo[aria-invalid='true'] { border-color: var(--color-error); }
 
@@ -59,31 +60,35 @@
   color: var(--color-error);
 }
 
-/* Filtro de alertas en forma de botones pegados. */
+/* Filtro de alertas: opciones dentro de una misma pastilla, la elegida
+   resaltada en oscuro. */
 .selector {
   display: inline-flex;
   flex-wrap: wrap;
   justify-self: start;
+  gap: 2px;
+  padding: var(--esp-1);
   border: 1px solid var(--color-borde);
-  border-radius: var(--radio-sm);
-  overflow: hidden;
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
 }
 
 .selector__opcion {
-  background: var(--color-superficie);
+  min-height: var(--alto-control);
+  background: transparent;
   border: none;
-  border-right: 1px solid var(--color-borde);
-  padding: var(--esp-1) var(--esp-3);
-  font-size: var(--tam-sm);
-  color: var(--color-texto-suave);
+  border-radius: var(--radio-sm);
+  padding: 0 var(--esp-4);
+  font-size: var(--tam-base);
+  font-weight: 500;
+  color: var(--color-texto-medio);
 }
 
-.selector__opcion:last-child { border-right: none; }
 .selector__opcion:hover { background: var(--color-fondo); color: var(--color-texto); }
 
 .selector__opcion--activa,
 .selector__opcion--activa:hover {
-  background: var(--color-primario);
+  background: var(--color-oscuro);
   color: #fff;
   font-weight: 600;
 }
