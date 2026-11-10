@@ -29,6 +29,9 @@ export default function App() {
   useEffect(() => {
     obtenerSesion()
       .then(setUsuario)
+      // Sin servidor la promesa rechaza; se cae al login en vez de quedar
+      // colgada con un error sin atender en la consola.
+      .catch(() => setUsuario(null))
       .finally(() => setVerificando(false));
   }, []);
 
@@ -40,9 +43,13 @@ export default function App() {
      consultar al servidor cada pocos segundos para enterarse. */
   useEffect(() => {
     if (!esEncargado) return;
+    /* Si la consulta falla no se deja el aviso en blanco: sin contador, el
+       Encargado lee "no hay alertas" justo cuando el sistema no pudo
+       fijarse. Se marca el fallo y la barra muestra un signo en vez de un
+       numero. */
     obtenerResumenAlertas()
       .then(setResumenAlertas)
-      .catch(() => setResumenAlertas(null));
+      .catch(() => setResumenAlertas({ total: 0, criticas: 0, fallo: true }));
   }, [esEncargado, pantalla]);
 
   async function salir() {
@@ -111,12 +118,20 @@ export default function App() {
                 aria-current={pantalla === clave ? 'page' : undefined}
               >
                 {texto}
-                {clave === 'alertas' && resumenAlertas?.total > 0 && (
+                {clave === 'alertas' && (resumenAlertas?.fallo || resumenAlertas?.total > 0) && (
                   <span
-                    className={`navegacion__contador ${resumenAlertas.criticas > 0 ? 'navegacion__contador--error' : ''}`}
+                    className={`navegacion__contador ${
+                      resumenAlertas.fallo || resumenAlertas.criticas > 0
+                        ? 'navegacion__contador--error'
+                        : ''
+                    }`}
                   >
-                    {resumenAlertas.total}
-                    <span className="visualmente-oculto"> alertas activas</span>
+                    {resumenAlertas.fallo ? '!' : resumenAlertas.total}
+                    <span className="visualmente-oculto">
+                      {resumenAlertas.fallo
+                        ? ' no se pudieron consultar las alertas'
+                        : ' alertas activas'}
+                    </span>
                   </span>
                 )}
               </button>

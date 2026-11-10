@@ -104,7 +104,11 @@ export default function Insumos() {
   }, [filtroEstado, orden]);
 
   useEffect(() => {
-    listarProveedores().then(setProveedores).catch(() => setProveedores([]));
+    /* Sin esta lista no se puede dar de alta ni registrar una entrada. Si
+       falla hay que decirlo y no hacerla pasar por "no hay proveedores". */
+    listarProveedores()
+      .then(setProveedores)
+      .catch((fallo) => setError(`No se pudieron cargar los proveedores: ${fallo.message}`));
   }, []);
 
   async function cargar() {
@@ -281,7 +285,7 @@ export default function Insumos() {
 
       {/* Sin proveedores no se puede dar de alta un insumo, porque la entrada
           de mercaderia necesita saber a quien se le compro. */}
-      {sinProveedores && (
+      {sinProveedores && !error && (
         <p className="seccion__ayuda">
           Para cargar un insumo primero hace falta registrar al menos un proveedor.
         </p>

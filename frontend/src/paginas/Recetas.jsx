@@ -34,8 +34,15 @@ export default function Recetas() {
 
   useEffect(() => {
     cargar();
-    listarProductos().then(setProductos).catch(() => setProductos([]));
-    listarMateriasPrimas().then(setInsumos).catch(() => setInsumos([]));
+    /* Los dos catalogos que llenan el formulario. Si alguno no se puede leer
+       hay que avisarlo, porque con la lista vacia la pantalla parece decir
+       que no hay productos o insumos cargados. */
+    listarProductos()
+      .then(setProductos)
+      .catch((fallo) => setError(`No se pudieron cargar los productos: ${fallo.message}`));
+    listarMateriasPrimas()
+      .then(setInsumos)
+      .catch((fallo) => setError(`No se pudieron cargar los insumos: ${fallo.message}`));
   }, []);
 
   async function cargar() {
@@ -188,7 +195,7 @@ export default function Recetas() {
         </p>
       )}
 
-      {productos.length === 0 && (
+      {productos.length === 0 && !error && (
         <p className="seccion__ayuda">
           Para cargar una receta primero hace falta dar de alta al menos un producto.
         </p>

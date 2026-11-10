@@ -35,7 +35,11 @@ export default function Ventas() {
 
   useEffect(() => {
     cargar(FILTROS_VACIOS);
-    listarProductos().then(setProductos).catch(() => setProductos([]));
+    /* El mostrador no puede vender sin el catalogo. Si no se pudo leer hay
+       que decirlo, y no dejar que parezca que no hay productos cargados. */
+    listarProductos()
+      .then(setProductos)
+      .catch((fallo) => setError(`No se pudieron cargar los productos: ${fallo.message}`));
   }, []);
 
   async function cargar(cuales) {
@@ -157,7 +161,12 @@ export default function Ventas() {
       cerrar();
       // Se recargan los productos porque la venta les bajo el stock, y el
       // formulario usa ese stock para avisar cuanto queda.
-      listarProductos().then(setProductos).catch(() => {});
+      /* Refresco del stock despues de vender. Si falla, lo que queda en
+         pantalla es el stock anterior a esta venta, asi que conviene avisar
+         antes de que el proximo renglon proponga una cantidad que ya no hay. */
+      listarProductos()
+        .then(setProductos)
+        .catch(() => setError('La venta se registro, pero no se pudo actualizar el stock en pantalla.'));
       await cargar(filtrosAplicados);
     } catch (fallo) {
       // Aca cae el aviso de stock insuficiente, que ya viene con el nombre
@@ -197,7 +206,7 @@ export default function Ventas() {
         </button>
       </header>
 
-      {productos.length === 0 && (
+      {productos.length === 0 && !error && (
         <p className="seccion__ayuda">
           Para registrar una venta primero hace falta cargar productos.
         </p>

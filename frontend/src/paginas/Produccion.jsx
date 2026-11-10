@@ -27,7 +27,12 @@ export default function Produccion() {
 
   useEffect(() => {
     cargar();
-    listarRecetas().then(setRecetas).catch(() => setRecetas([]));
+    /* Si esta lectura falla hay que decirlo: dejarla en lista vacia hacia que
+       la pantalla dijera que no habia recetas cargadas cuando en realidad no
+       se habian podido leer. */
+    listarRecetas()
+      .then(setRecetas)
+      .catch((fallo) => setError(`No se pudieron cargar las recetas: ${fallo.message}`));
   }, []);
 
   async function cargar() {
@@ -116,7 +121,7 @@ export default function Produccion() {
         </button>
       </header>
 
-      {recetas.length === 0 && (
+      {recetas.length === 0 && !error && (
         <p className="seccion__ayuda">
           Para registrar un lote primero hace falta cargar una receta.
         </p>
