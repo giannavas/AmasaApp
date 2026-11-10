@@ -144,7 +144,7 @@ test('recien cargado, el pan sin stock ya figura en alerta y la harina no', asyn
 });
 
 test('el Encargado configura el umbral minimo de la harina (CU-09)', async () => {
-  // Caso de prueba 14 del documento, paso 1.
+  // Caso de prueba 13 del documento, paso 1.
   const { estado } = await como('encargado', '/api/alertas/umbrales', {
     metodo: 'PUT',
     cuerpo: { umbrales: [{ origen: 'Insumo', id: ids.harina, stockMinimo: 8, stockMaximo: 50 }] },
@@ -210,7 +210,7 @@ test('el panel del dia muestra la venta, el lote, la rentabilidad y el mas vendi
     datos.productosMasVendidos.map((p) => [p.nombre, p.unidades, p.costoUnitario]),
     [['ZTI Pan', 27, 500]]
   );
-  /* Caso de prueba 15: costo unitario segun la receta, 5 kg de harina a $1000
+  /* Caso de prueba 14: costo unitario segun la receta, 5 kg de harina a $1000
      cada 10 panes = $500. Vendidos 27 a $3000: $81000 - $13500 = $67500. */
   assert.equal(datos.indicadores.rentabilidadEstimada, 67500);
   assert.equal(datos.rentabilidad.margen, 83.33);

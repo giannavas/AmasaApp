@@ -121,7 +121,7 @@ async function produccionDelDia() {
 /**
  * Rentabilidad estimada del periodo: lo vendido menos lo que costo
  * fabricarlo, con el costo unitario de cada producto segun su receta (RF-06,
- * y el caso de prueba 15 del documento).
+ * y el caso de prueba 14 del documento).
  *
  * Es una estimacion por dos motivos, y por eso se llama asi: usa el costo de
  * los insumos de hoy, no el del dia en que se produjo; y no incluye gastos

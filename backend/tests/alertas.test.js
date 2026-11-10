@@ -360,7 +360,7 @@ test('solo el Encargado configura umbrales', async () => {
 });
 
 test('subir el minimo por encima del stock genera la alerta en el momento', async () => {
-  /* Caso de prueba 14 del documento: se configura el umbral y el sistema
+  /* Caso de prueba 13 del documento: se configura el umbral y el sistema
      muestra el item en estado critico. La levadura tiene 15. */
   const r = await guardar([
     { origen: 'Insumo', id: ids['ZTA Levadura'], stockMinimo: 20, stockMaximo: 40 },

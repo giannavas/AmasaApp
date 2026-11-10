@@ -90,7 +90,7 @@ Se corren con `npm test` dentro de `backend/`.
 | `alertas.test.js` | 40 | CU-09 / 10 Umbrales y alertas |
 | `panel.test.js` | 25 | CU-12 Panel de control |
 | `db.test.js` | 5 | Conexión a la base |
-| `integracion.test.js` | 10 | Un día completo de la panadería, incluye los casos de prueba 14 y 15 |
+| `integracion.test.js` | 10 | Un día completo de la panadería, incluye los casos de prueba 13 y 14 |
 
 La prueba de integración recorre el circuito completo: el Encargado carga
 proveedor, insumo, producto y receta; configura el umbral de la harina; el
