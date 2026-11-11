@@ -39,13 +39,13 @@ import { pool, consultar, conTransaccion } from '../src/config/db.js';
 
 /** Ultimo dia de la ventana; la presentacion habla de los 60 dias previos. */
 const DIA_FINAL = '2026-11-10';
-const DIAS = 60;
+const DIAS = 30;
 
 /** Totales que tiene que mostrar la base, segun la diapositiva 23. */
 const OBJETIVOS = {
-  venta: 4391,
-  lote_produccion: 384,
-  ingreso_materia_prima: 134,
+  venta: 1500,
+  lote_produccion: 122,
+  ingreso_materia_prima: 52,
   materia_prima: 12,
   producto: 8,
 };
@@ -82,8 +82,8 @@ const ARRANQUE = [2.5, 2.2, 1.6];
 const INSUMO_NUEVO = {
   nombre: 'Grasa vacuna refinada',
   unidad: 'kg',
-  stockMinimo: 5,
-  stockMaximo: 40,
+  stockMinimo: 7,
+  stockMaximo: 32,
   precioBase: 4200,
   proveedor: 'Distribuidora La Rosarina',
   diasVencimiento: 120,
@@ -106,7 +106,7 @@ const PRODUCTOS_NUEVOS = [
   {
     nombre: 'Factura de grasa',
     descripcion: 'Surtido de grasa, por unidad',
-    precioVenta: 380,
+    precioVenta: 410,
     stockMinimo: 40,
     stockMaximo: 300,
     receta: {
@@ -124,7 +124,7 @@ const PRODUCTOS_NUEVOS = [
   {
     nombre: 'Torta frita',
     descripcion: 'Por unidad, se hace en el dia',
-    precioVenta: 300,
+    precioVenta: 325,
     stockMinimo: 20,
     stockMaximo: 180,
     receta: {
@@ -141,7 +141,7 @@ const PRODUCTOS_NUEVOS = [
   {
     nombre: 'Pan de viena',
     descripcion: 'Pan de miga tierna, por unidad',
-    precioVenta: 420,
+    precioVenta: 455,
     stockMinimo: 25,
     stockMaximo: 200,
     receta: {
@@ -160,7 +160,7 @@ const PRODUCTOS_NUEVOS = [
   {
     nombre: 'Palmerita',
     descripcion: 'Hojaldre con azucar, por unidad',
-    precioVenta: 600,
+    precioVenta: 650,
     stockMinimo: 20,
     stockMaximo: 160,
     receta: {
@@ -177,7 +177,7 @@ const PRODUCTOS_NUEVOS = [
   {
     nombre: 'Bizcocho de grasa',
     descripcion: 'Bizcochitos salados, por unidad',
-    precioVenta: 160,
+    precioVenta: 175,
     stockMinimo: 25,
     stockMaximo: 220,
     receta: {
@@ -197,18 +197,18 @@ const PRODUCTOS_NUEVOS = [
    faltan para los 134 de la presentacion. Los que mas se consumen se
    reponen mas seguido; la miel o el almidon entran una vez por mes. */
 const COMPRAS_POR_INSUMO = {
-  'Harina 000': 26,
-  'Levadura fresca': 14,
-  'Sal fina': 8,
-  'Azucar': 12,
-  'Manteca': 14,
-  'Leche entera': 12,
-  'Huevos': 6,
-  'Miel': 3,
-  'Aceite de girasol': 3,
-  'Almidon de maiz': 3,
-  'Dulce de leche repostero': 6,
-  'Grasa vacuna refinada': 13,
+  'Harina 000': 5,
+  'Levadura fresca': 5,
+  'Sal fina': 4,
+  'Azucar': 4,
+  'Manteca': 5,
+  'Leche entera': 5,
+  'Huevos': 4,
+  'Miel': 4,
+  'Aceite de girasol': 4,
+  'Almidon de maiz': 4,
+  'Dulce de leche repostero': 4,
+  'Grasa vacuna refinada': 4,
 };
 
 /* Como se compra cada insumo: la cantidad de cada entrega se redondea para
@@ -1099,7 +1099,7 @@ async function principal() {
 /* La planificacion de compras se exporta para poder probarla sin tocar la
    base: es la parte con cuentas propias y es donde estuvo el problema del
    azucar. La siembra en si solo corre cuando se invoca el script directo. */
-export { planificarCompras };
+export { planificarCompras, DIAS };
 
 const invocadoDirecto = Boolean(process.argv[1])
   && import.meta.url === pathToFileURL(process.argv[1]).href;

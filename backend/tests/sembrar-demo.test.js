@@ -1,7 +1,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { pool } from '../src/config/db.js';
-import { planificarCompras } from '../scripts/sembrar-demo.js';
+import { planificarCompras, DIAS } from '../scripts/sembrar-demo.js';
 
 /* El script de siembra no es parte del sistema, pero su planificacion de
    compras tiene cuentas propias y ahi estuvo un problema real: el azucar
@@ -16,7 +16,7 @@ import { planificarCompras } from '../scripts/sembrar-demo.js';
 
    No tocan la base: planificarCompras es una funcion pura. */
 
-const DIAS = 60;
+/* La ventana la define el script: si cambia alla, la prueba lo sigue. */
 
 // Lunes a domingo girando, para que caigan domingos adentro de la ventana.
 const diasDe = (n) => Array.from({ length: n }, (_, i) => ({ diaSemana: (i + 1) % 7 }));
